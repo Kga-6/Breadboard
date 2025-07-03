@@ -145,7 +145,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setIsAdmin(tokenValues.claims.role === "admin");
 
         const userRef = doc(firestore, "users", firebaseUser.uid);
-        await updateDoc(userRef, { online: true });
+        //await updateDoc(userRef, { online: true });
 
         // --- Attach All Real-time Listeners ---
         // User Data Listener
