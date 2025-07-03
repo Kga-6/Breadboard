@@ -3,9 +3,11 @@ import type { NextRequest } from 'next/server'
 
 export function middleware(request: NextRequest) {
   const token = request.cookies.get('firebaseIdToken')?.value
+  const { pathname } = request.nextUrl
 
   // take to welcome page if user not found
-  if (!token && request.nextUrl.pathname !== '/') {
+  if (!token && pathname.startsWith('/dashboard')) {
+    // If no token, redirect to the homepage
     return NextResponse.redirect(new URL('/', request.url))
   }
 

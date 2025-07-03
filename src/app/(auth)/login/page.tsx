@@ -17,7 +17,7 @@ export default function Login() {
     e.preventDefault();
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      router.replace("/home");
+      router.replace("/dashboard/home");
     } catch (err: any) {
       setError(err.message);
     }

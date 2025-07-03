@@ -13,7 +13,7 @@ export default function Home(){
       auth?.loginGoogle()
         .then(() => {
             console.log("Logged in!");
-            router.replace("/home");
+            router.replace("/dashboard/home");
         })
         .catch(() => {
             console.error("Something went wrong");
@@ -32,7 +32,7 @@ export default function Home(){
         )}
 
         {auth?.currentUser && (
-          <Link href="/home">Dashboard</Link>
+          <Link href="/dashboard/home">Dashboard</Link>
         )}
         
       </>
