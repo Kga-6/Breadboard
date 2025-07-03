@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "NEXT_PUBLIC_APP_ENV='emulator' next dev",
+    "dev": "cross-env NEXT_PUBLIC_APP_ENV='emulator' next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
@@ -24,6 +24,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "cross-env": "^7.0.3",
     "eslint": "^9",
     "eslint-config-next": "15.3.4",
     "tailwindcss": "^4",

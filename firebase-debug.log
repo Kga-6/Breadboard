@@ -1,0 +1,140 @@
+[debug] [2025-07-03T02:41:38.794Z] ----------------------------------------------------------------------
+[debug] [2025-07-03T02:41:38.797Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\Kevin\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js emulators:start
+[debug] [2025-07-03T02:41:38.797Z] CLI Version:   14.9.0
+[debug] [2025-07-03T02:41:38.797Z] Platform:      win32
+[debug] [2025-07-03T02:41:38.798Z] Node Version:  v22.17.0
+[debug] [2025-07-03T02:41:38.798Z] Time:          Wed Jul 02 2025 22:41:38 GMT-0400 (Eastern Daylight Time)
+[debug] [2025-07-03T02:41:38.798Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2025-07-03T02:41:39.020Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-07-03T02:41:39.020Z] > authorizing via signed-in user (kguerrero0325@gmail.com)
+[debug] [2025-07-03T02:41:39.128Z] java version "24.0.1" 2025-04-15
+Java(TM) SE Runtime Environment (build 24.0.1+9-30)
+Java HotSpot(TM) 64-Bit Server VM (build 24.0.1+9-30, mixed mode, sharing)
+
+[debug] [2025-07-03T02:41:39.145Z] Parsed Java major version: 24
+[info] i  emulators: Starting emulators: auth, functions, firestore, extensions {"metadata":{"emulator":{"name":"hub"},"message":"Starting emulators: auth, functions, firestore, extensions"}}
+[debug] [2025-07-03T02:41:39.147Z] Checked if tokens are valid: true, expires at: 1751513579904
+[debug] [2025-07-03T02:41:39.147Z] Checked if tokens are valid: true, expires at: 1751513579904
+[debug] [2025-07-03T02:41:39.148Z] >>> [apiv2][query] GET https://cloudresourcemanager.googleapis.com/v1/projects/breadboard-3b5b8 [none]
+[debug] [2025-07-03T02:41:39.429Z] <<< [apiv2][status] GET https://cloudresourcemanager.googleapis.com/v1/projects/breadboard-3b5b8 200
+[debug] [2025-07-03T02:41:39.429Z] <<< [apiv2][body] GET https://cloudresourcemanager.googleapis.com/v1/projects/breadboard-3b5b8 {"projectNumber":"656693529157","projectId":"breadboard-3b5b8","lifecycleState":"ACTIVE","name":"Breadboard","labels":{"firebase":"enabled","firebase-core":"disabled"},"createTime":"2025-07-02T12:50:15.784015Z"}
+[debug] [2025-07-03T02:41:39.450Z] [logging] Logging Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2025-07-03T02:41:39.450Z] [auth] Authentication Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2025-07-03T02:41:39.450Z] [firestore] Firestore Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2025-07-03T02:41:39.450Z] [firestore.websocket] websocket server for firestore only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2025-07-03T02:41:39.450Z] assigned listening specs for emulators {"user":{"hub":[{"address":"127.0.0.1","family":"IPv4","port":4400},{"address":"::1","family":"IPv6","port":4400}],"ui":[{"address":"127.0.0.1","family":"IPv4","port":4000},{"address":"::1","family":"IPv6","port":4000}],"logging":[{"address":"127.0.0.1","family":"IPv4","port":4500}],"auth":[{"address":"127.0.0.1","family":"IPv4","port":9099}],"firestore":[{"address":"127.0.0.1","family":"IPv4","port":8080}],"firestore.websocket":[{"address":"127.0.0.1","family":"IPv4","port":9150}]},"metadata":{"message":"assigned listening specs for emulators"}}
+[debug] [2025-07-03T02:41:39.455Z] [hub] writing locator at C:\Users\Kevin\AppData\Local\Temp\hub-breadboard-3b5b8.json
+[debug] [2025-07-03T02:41:39.462Z] [Extensions] Started Extensions emulator, this is a noop.
+[debug] [2025-07-03T02:41:39.466Z] [functions] Functions Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2025-07-03T02:41:39.466Z] [eventarc] Eventarc Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2025-07-03T02:41:39.466Z] [tasks] Cloud Tasks Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2025-07-03T02:41:39.467Z] late-assigned ports for functions and eventarc emulators {"user":{"hub":[{"address":"127.0.0.1","family":"IPv4","port":4400},{"address":"::1","family":"IPv6","port":4400}],"ui":[{"address":"127.0.0.1","family":"IPv4","port":4000},{"address":"::1","family":"IPv6","port":4000}],"logging":[{"address":"127.0.0.1","family":"IPv4","port":4500}],"auth":[{"address":"127.0.0.1","family":"IPv4","port":9099}],"firestore":[{"address":"127.0.0.1","family":"IPv4","port":8080}],"firestore.websocket":[{"address":"127.0.0.1","family":"IPv4","port":9150}],"functions":[{"address":"127.0.0.1","family":"IPv4","port":5001}],"eventarc":[{"address":"127.0.0.1","family":"IPv4","port":9299}],"tasks":[{"address":"127.0.0.1","family":"IPv4","port":9499}]},"metadata":{"message":"late-assigned ports for functions and eventarc emulators"}}
+[warn] !  functions: The following emulators are not running, calls to these services from the Functions emulator will affect production: apphosting, database, hosting, pubsub, storage, dataconnect {"metadata":{"emulator":{"name":"functions"},"message":"The following emulators are not running, calls to these services from the Functions emulator will affect production: \u001b[1mapphosting, database, hosting, pubsub, storage, dataconnect\u001b[22m"}}
+[debug] [2025-07-03T02:41:39.502Z] defaultcredentials: writing to file C:\Users\Kevin\AppData\Roaming\firebase\kguerrero0325_gmail_com_application_default_credentials.json
+[debug] [2025-07-03T02:41:39.503Z] Setting GAC to C:\Users\Kevin\AppData\Roaming\firebase\kguerrero0325_gmail_com_application_default_credentials.json {"metadata":{"emulator":{"name":"functions"},"message":"Setting GAC to C:\\Users\\Kevin\\AppData\\Roaming\\firebase\\kguerrero0325_gmail_com_application_default_credentials.json"}}
+[debug] [2025-07-03T02:41:39.504Z] Checked if tokens are valid: true, expires at: 1751513579904
+[debug] [2025-07-03T02:41:39.504Z] Checked if tokens are valid: true, expires at: 1751513579904
+[debug] [2025-07-03T02:41:39.504Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/breadboard-3b5b8/adminSdkConfig [none]
+[debug] [2025-07-03T02:41:39.838Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/breadboard-3b5b8/adminSdkConfig 200
+[debug] [2025-07-03T02:41:39.839Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/breadboard-3b5b8/adminSdkConfig {"projectId":"breadboard-3b5b8","storageBucket":"breadboard-3b5b8.firebasestorage.app"}
+[debug] [2025-07-03T02:41:39.855Z] Ignoring unsupported arg: auto_download {"metadata":{"emulator":{"name":"firestore"},"message":"Ignoring unsupported arg: auto_download"}}
+[debug] [2025-07-03T02:41:39.855Z] Ignoring unsupported arg: single_project_mode_error {"metadata":{"emulator":{"name":"firestore"},"message":"Ignoring unsupported arg: single_project_mode_error"}}
+[debug] [2025-07-03T02:41:39.855Z] Starting Firestore Emulator with command {"binary":"java","args":["-Dgoogle.cloud_firestore.debug_log_level=FINE","-Duser.language=en","-jar","C:\\Users\\Kevin\\.cache\\firebase\\emulators\\cloud-firestore-emulator-v1.19.8.jar","--host","127.0.0.1","--port",8080,"--websocket_port",9150,"--project_id","breadboard-3b5b8","--rules","C:\\Users\\Kevin\\Documents\\GitHub\\breadboard\\firestore.rules","--single_project_mode",true,"--functions_emulator","127.0.0.1:5001"],"optionalArgs":["port","webchannel_port","host","rules","websocket_port","functions_emulator","seed_from_export","project_id","single_project_mode"],"joinArgs":false,"shell":false,"port":8080} {"metadata":{"emulator":{"name":"firestore"},"message":"Starting Firestore Emulator with command {\"binary\":\"java\",\"args\":[\"-Dgoogle.cloud_firestore.debug_log_level=FINE\",\"-Duser.language=en\",\"-jar\",\"C:\\\\Users\\\\Kevin\\\\.cache\\\\firebase\\\\emulators\\\\cloud-firestore-emulator-v1.19.8.jar\",\"--host\",\"127.0.0.1\",\"--port\",8080,\"--websocket_port\",9150,\"--project_id\",\"breadboard-3b5b8\",\"--rules\",\"C:\\\\Users\\\\Kevin\\\\Documents\\\\GitHub\\\\breadboard\\\\firestore.rules\",\"--single_project_mode\",true,\"--functions_emulator\",\"127.0.0.1:5001\"],\"optionalArgs\":[\"port\",\"webchannel_port\",\"host\",\"rules\",\"websocket_port\",\"functions_emulator\",\"seed_from_export\",\"project_id\",\"single_project_mode\"],\"joinArgs\":false,\"shell\":false,\"port\":8080}"}}
+[info] i  firestore: Firestore Emulator logging to firestore-debug.log {"metadata":{"emulator":{"name":"firestore"},"message":"Firestore Emulator logging to \u001b[1mfirestore-debug.log\u001b[22m"}}
+[info] +  firestore: Firestore Emulator UI websocket is running on 9150. {"metadata":{"emulator":{"name":"firestore"},"message":"Firestore Emulator UI websocket is running on 9150."}}
+[debug] [2025-07-03T02:41:47.598Z] [Extensions] Connecting Extensions emulator, this is a noop.
+[info] i  functions: Watching "C:\Users\Kevin\Documents\GitHub\breadboard\firebase\functions" for Cloud Functions... {"metadata":{"emulator":{"name":"functions"},"message":"Watching \"C:\\Users\\Kevin\\Documents\\GitHub\\breadboard\\firebase\\functions\" for Cloud Functions..."}}
+[debug] [2025-07-03T02:41:47.604Z] Validating nodejs source
+[warn] !  functions: Couldn't find firebase-functions package in your source code. Have you run 'npm install'? 
+[debug] [2025-07-03T02:41:47.605Z] getFunctionsSDKVersion encountered error: Cannot find module 'firebase-functions'
+Require stack:
+- C:\Users\Kevin\AppData\Roaming\npm\node_modules\firebase-tools\lib\deploy\functions\runtimes\node\versioning.js
+- C:\Users\Kevin\AppData\Roaming\npm\node_modules\firebase-tools\lib\deploy\functions\runtimes\node\index.js
+- C:\Users\Kevin\AppData\Roaming\npm\node_modules\firebase-tools\lib\deploy\functions\runtimes\index.js
+- C:\Users\Kevin\AppData\Roaming\npm\node_modules\firebase-tools\lib\deploy\functions\prepare.js
+- C:\Users\Kevin\AppData\Roaming\npm\node_modules\firebase-tools\lib\emulator\functionsEmulatorShared.js
+- C:\Users\Kevin\AppData\Roaming\npm\node_modules\firebase-tools\lib\emulator\functionsEmulator.js
+- C:\Users\Kevin\AppData\Roaming\npm\node_modules\firebase-tools\lib\emulator\controller.js
+- C:\Users\Kevin\AppData\Roaming\npm\node_modules\firebase-tools\lib\emulator\commandUtils.js
+- C:\Users\Kevin\AppData\Roaming\npm\node_modules\firebase-tools\lib\commands\database-get.js
+- C:\Users\Kevin\AppData\Roaming\npm\node_modules\firebase-tools\lib\commands\index.js
+- C:\Users\Kevin\AppData\Roaming\npm\node_modules\firebase-tools\lib\index.js
+- C:\Users\Kevin\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\cli.js
+- C:\Users\Kevin\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js {"code":"MODULE_NOT_FOUND","requireStack":["C:\\Users\\Kevin\\AppData\\Roaming\\npm\\node_modules\\firebase-tools\\lib\\deploy\\functions\\runtimes\\node\\versioning.js","C:\\Users\\Kevin\\AppData\\Roaming\\npm\\node_modules\\firebase-tools\\lib\\deploy\\functions\\runtimes\\node\\index.js","C:\\Users\\Kevin\\AppData\\Roaming\\npm\\node_modules\\firebase-tools\\lib\\deploy\\functions\\runtimes\\index.js","C:\\Users\\Kevin\\AppData\\Roaming\\npm\\node_modules\\firebase-tools\\lib\\deploy\\functions\\prepare.js","C:\\Users\\Kevin\\AppData\\Roaming\\npm\\node_modules\\firebase-tools\\lib\\emulator\\functionsEmulatorShared.js","C:\\Users\\Kevin\\AppData\\Roaming\\npm\\node_modules\\firebase-tools\\lib\\emulator\\functionsEmulator.js","C:\\Users\\Kevin\\AppData\\Roaming\\npm\\node_modules\\firebase-tools\\lib\\emulator\\controller.js","C:\\Users\\Kevin\\AppData\\Roaming\\npm\\node_modules\\firebase-tools\\lib\\emulator\\commandUtils.js","C:\\Users\\Kevin\\AppData\\Roaming\\npm\\node_modules\\firebase-tools\\lib\\commands\\database-get.js","C:\\Users\\Kevin\\AppData\\Roaming\\npm\\node_modules\\firebase-tools\\lib\\commands\\index.js","C:\\Users\\Kevin\\AppData\\Roaming\\npm\\node_modules\\firebase-tools\\lib\\index.js","C:\\Users\\Kevin\\AppData\\Roaming\\npm\\node_modules\\firebase-tools\\lib\\bin\\cli.js","C:\\Users\\Kevin\\AppData\\Roaming\\npm\\node_modules\\firebase-tools\\lib\\bin\\firebase.js"]}
+[debug] [2025-07-03T02:41:47.606Z] checkFunctionsSDKVersion encountered error: Invalid Version:  {}
+[debug] [2025-07-03T02:41:47.607Z] > [functions] package.json contents: {
+  "name": "functions",
+  "scripts": {
+    "lint": "eslint --ext .js,.ts .",
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "serve": "npm run build && firebase emulators:start --only functions",
+    "shell": "npm run build && firebase functions:shell",
+    "start": "npm run shell",
+    "deploy": "firebase deploy --only functions",
+    "logs": "firebase functions:log"
+  },
+  "engines": {
+    "node": "22"
+  },
+  "main": "lib/index.js",
+  "dependencies": {
+    "firebase-admin": "^12.6.0",
+    "firebase-functions": "^6.0.1"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^5.12.0",
+    "@typescript-eslint/parser": "^5.12.0",
+    "eslint": "^8.9.0",
+    "eslint-config-google": "^0.14.0",
+    "eslint-plugin-import": "^2.25.4",
+    "firebase-functions-test": "^3.1.0",
+    "typescript": "^5.7.3"
+  },
+  "private": true
+}
+[error] !!  functions: Failed to load function definition from source: FirebaseError: There was an error reading firebase\functions\package.json:
+
+ firebase\functions\lib\index.js does not exist, can't deploy Cloud Functions {"metadata":{"emulator":{"name":"functions"},"message":"Failed to load function definition from source: FirebaseError: There was an error reading firebase\\functions\\package.json:\n\n firebase\\functions\\lib\\index.js does not exist, can't deploy Cloud Functions"}}
+[debug] [2025-07-03T02:41:47.612Z] Could not find VSCode notification endpoint: FetchError: request to http://localhost:40001/vscode/notify failed, reason: . If you are not running the Firebase Data Connect VSCode extension, this is expected and not an issue.
+[info] 
+┌─────────────────────────────────────────────────────────────┐
+│ ✔  All emulators ready! It is now safe to connect your app. │
+│ i  View Emulator UI at http://127.0.0.1:4000/               │
+└─────────────────────────────────────────────────────────────┘
+
+┌────────────────┬────────────────┬──────────────────────────────────┐
+│ Emulator       │ Host:Port      │ View in Emulator UI              │
+├────────────────┼────────────────┼──────────────────────────────────┤
+│ Authentication │ 127.0.0.1:9099 │ http://127.0.0.1:4000/auth       │
+├────────────────┼────────────────┼──────────────────────────────────┤
+│ Functions      │ 127.0.0.1:5001 │ http://127.0.0.1:4000/functions  │
+├────────────────┼────────────────┼──────────────────────────────────┤
+│ Firestore      │ 127.0.0.1:8080 │ http://127.0.0.1:4000/firestore  │
+├────────────────┼────────────────┼──────────────────────────────────┤
+│ Extensions     │ 127.0.0.1:5001 │ http://127.0.0.1:4000/extensions │
+└────────────────┴────────────────┴──────────────────────────────────┘
+  Emulator Hub host: 127.0.0.1 port: 4400
+  Other reserved ports: 4500, 9150
+┌─────────────────────────┬───────────────┬─────────────────────┐
+│ Extension Instance Name │ Extension Ref │ View in Emulator UI │
+└─────────────────────────┴───────────────┴─────────────────────┘
+Issues? Report them at https://github.com/firebase/firebase-tools/issues and attach the *-debug.log files.
+ 
+[debug] [2025-07-03T03:03:39.479Z] >>> [apiv2][query] POST http://127.0.0.1:5001/functions/projects/breadboard-3b5b8/trigger_multicast [none]
+[debug] [2025-07-03T03:03:39.480Z] >>> [apiv2][body] POST http://127.0.0.1:5001/functions/projects/breadboard-3b5b8/trigger_multicast {"eventId":"1c5d8f29-c0d0-4610-b94a-2f628258e71f","eventType":"providers/firebase.auth/eventTypes/user.create","resource":{"name":"projects/breadboard-3b5b8","service":"firebaseauth.googleapis.com"},"params":{},"timestamp":"2025-07-03T03:03:39.479Z","data":{"uid":"Li6di33yRsJuQcMOYTBPqXNJD13N","email":"kguerrero0325@gmail.com","emailVerified":false,"metadata":{"creationTime":"2025-07-03T03:03:39.477Z","lastSignInTime":"2025-07-03T03:03:39.477Z"},"customClaims":{},"providerData":[{"rawId":"kguerrero0325@gmail.com","providerId":"password","email":"kguerrero0325@gmail.com","federatedId":"kguerrero0325@gmail.com"}]}}
+[debug] [2025-07-03T03:03:39.487Z] <<< [apiv2][status] POST http://127.0.0.1:5001/functions/projects/breadboard-3b5b8/trigger_multicast 200
+[debug] [2025-07-03T03:03:39.488Z] <<< [apiv2][body] POST http://127.0.0.1:5001/functions/projects/breadboard-3b5b8/trigger_multicast {"status":"multicast_acknowledged"}
+[debug] [2025-07-03T03:04:49.813Z] >>> [apiv2][query] POST http://127.0.0.1:5001/functions/projects/breadboard-3b5b8/trigger_multicast [none]
+[debug] [2025-07-03T03:04:49.813Z] >>> [apiv2][body] POST http://127.0.0.1:5001/functions/projects/breadboard-3b5b8/trigger_multicast {"eventId":"8a600c9c-e85e-45fb-ae1b-ba0454a41560","eventType":"providers/firebase.auth/eventTypes/user.delete","resource":{"name":"projects/breadboard-3b5b8","service":"firebaseauth.googleapis.com"},"params":{},"timestamp":"2025-07-03T03:04:49.813Z","data":{"uid":"Li6di33yRsJuQcMOYTBPqXNJD13N","email":"kguerrero0325@gmail.com","emailVerified":false,"metadata":{"creationTime":"2025-07-03T03:03:39.477Z","lastSignInTime":"2025-07-03T03:04:02.876Z"},"customClaims":{},"providerData":[{"rawId":"kguerrero0325@gmail.com","providerId":"password","email":"kguerrero0325@gmail.com","federatedId":"kguerrero0325@gmail.com"}]}}
+[debug] [2025-07-03T03:04:49.817Z] <<< [apiv2][status] POST http://127.0.0.1:5001/functions/projects/breadboard-3b5b8/trigger_multicast 200
+[debug] [2025-07-03T03:04:49.817Z] <<< [apiv2][body] POST http://127.0.0.1:5001/functions/projects/breadboard-3b5b8/trigger_multicast {"status":"multicast_acknowledged"}
+[debug] [2025-07-03T03:07:25.763Z] >>> [apiv2][query] POST http://127.0.0.1:5001/functions/projects/breadboard-3b5b8/trigger_multicast [none]
+[debug] [2025-07-03T03:07:25.763Z] >>> [apiv2][body] POST http://127.0.0.1:5001/functions/projects/breadboard-3b5b8/trigger_multicast {"eventId":"cb985823-40db-4c9a-bbe4-c185ed49eb99","eventType":"providers/firebase.auth/eventTypes/user.create","resource":{"name":"projects/breadboard-3b5b8","service":"firebaseauth.googleapis.com"},"params":{},"timestamp":"2025-07-03T03:07:25.762Z","data":{"uid":"FP7ba85vbt7o33TMy7Zzghu4s1az","email":"kguerrero0325@gmail.com","emailVerified":false,"metadata":{"creationTime":"2025-07-03T03:07:25.762Z","lastSignInTime":"2025-07-03T03:07:25.762Z"},"customClaims":{},"providerData":[{"rawId":"kguerrero0325@gmail.com","providerId":"password","email":"kguerrero0325@gmail.com","federatedId":"kguerrero0325@gmail.com"}]}}
+[debug] [2025-07-03T03:07:25.768Z] <<< [apiv2][status] POST http://127.0.0.1:5001/functions/projects/breadboard-3b5b8/trigger_multicast 200
+[debug] [2025-07-03T03:07:25.768Z] <<< [apiv2][body] POST http://127.0.0.1:5001/functions/projects/breadboard-3b5b8/trigger_multicast {"status":"multicast_acknowledged"}
+[debug] [2025-07-03T03:15:25.790Z] >>> [apiv2][query] POST http://127.0.0.1:5001/functions/projects/breadboard-3b5b8/trigger_multicast [none]
+[debug] [2025-07-03T03:15:25.790Z] >>> [apiv2][body] POST http://127.0.0.1:5001/functions/projects/breadboard-3b5b8/trigger_multicast {"eventId":"00b3389c-cbc7-43d6-9f03-0ca4e42d4513","eventType":"providers/firebase.auth/eventTypes/user.create","resource":{"name":"projects/breadboard-3b5b8","service":"firebaseauth.googleapis.com"},"params":{},"timestamp":"2025-07-03T03:15:25.790Z","data":{"uid":"ojxF3zvFb5tTN0LVoBtE0tfqsKJR","email":"grass.panda.175@example.com","emailVerified":true,"displayName":"Grass Panda","metadata":{"creationTime":"2025-07-03T03:15:25.790Z","lastSignInTime":"2025-07-03T03:15:25.790Z"},"customClaims":{},"providerData":[{"rawId":"4543415721595604595408407768278486253326","providerId":"google.com","displayName":"Grass Panda","email":"grass.panda.175@example.com","federatedId":"4543415721595604595408407768278486253326","screenName":"panda_grass"}]}}
+[debug] [2025-07-03T03:15:25.797Z] <<< [apiv2][status] POST http://127.0.0.1:5001/functions/projects/breadboard-3b5b8/trigger_multicast 200
+[debug] [2025-07-03T03:15:25.797Z] <<< [apiv2][body] POST http://127.0.0.1:5001/functions/projects/breadboard-3b5b8/trigger_multicast {"status":"multicast_acknowledged"}

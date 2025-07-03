@@ -1,9 +1,20 @@
 "use client";
-
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
-import { onAuthStateChanged, User } from "firebase/auth";
-import { auth } from "../firebase";
-import { resolve } from "path";
+import { GoogleAuthProvider, onAuthStateChanged, signInWithPopup, User } from "firebase/auth";
+import { auth } from "../../../firebase/client";
+import Cookies from "js-cookie";
+
+export function getAuthToken():String | undefined {
+  return Cookies.get("firebaseIdToken");
+}
+
+export function setAuthToken(token: string):string | undefined {
+  return Cookies.set("firebaseIdToken", token, {secure:true});
+}
+
+export function removeAuthToken(): void {
+  return Cookies.remove("firebaseIdToken");
+}
 
 interface AuthContextType {
   currentUser: User | null;
@@ -24,7 +35,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   function loginGoogle(): Promise<void> {
     return new Promise((resolve,reject) => {
-      reject()
+      if(!auth){
+        reject()
+        return;
+      }
+      signInWithPopup(auth, new GoogleAuthProvider())
+        .then((user) => {
+          console.log("signed in!")
+          resolve()
+        })
+        .catch(()=>{
+          console.error("Something went wrong")
+          reject()
+        })
     })
   }
 
@@ -48,12 +71,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    if (!auth) return;
+
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if(!user){
         setCurrentUser(null);
+        setIsAdmin(false)
+        setIsPro(false)
+        removeAuthToken();
       }
       if(user) {
+        const token = await user.getIdToken();
         setCurrentUser(user);
+        setAuthToken(token);
+
         setLoading(false);
         console.log("Current user: ", user)
       }
