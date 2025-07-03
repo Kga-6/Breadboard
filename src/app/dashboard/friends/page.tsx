@@ -105,13 +105,18 @@ export default function Friends() {
             {filteredFriends.map((friend) => (
               <li key={friend.id} className="flex justify-between">
                 <span>{friend.username}</span>
-                <span
-                  className={`text-sm ${
-                    friend.online ? 'text-green-500' : 'text-gray-400'
-                  }`}
-                >
-                  {friend.online ? 'Online' : 'Offline'}
-                </span>
+                <div>
+                    <span
+                    className={`text-sm ${
+                        friend.online ? 'text-green-500' : 'text-gray-400'
+                    }`}
+                    >
+                    {friend.online ? 'Online' : 'Offline'}
+                    </span>
+                    <button className="text-red-500 text-sm hover:underline">
+                        Remove Friend
+                    </button>
+                </div>
               </li>
             ))}
           </ul>
@@ -123,7 +128,12 @@ export default function Friends() {
             {onlineFriends.map((friend) => (
               <li key={friend.id} className="flex justify-between">
                 <span>{friend.username}</span>
-                <span className="text-green-500 text-sm">Online</span>
+                <div>
+                    <span className="text-green-500 text-sm">Online</span>
+                    <button className="text-red-500 text-sm hover:underline">
+                        Remove Friend
+                    </button>
+                </div>
               </li>
             ))}
             {onlineFriends.length === 0 && (
