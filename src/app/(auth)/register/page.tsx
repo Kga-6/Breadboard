@@ -1,4 +1,3 @@
-// src/app/(auth)/register/page.tsx
 "use client";
 
 import { useState } from "react";
@@ -8,6 +7,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 export default function Register() {
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -27,6 +27,13 @@ export default function Register() {
     <div>
       <h1>Register</h1>
       <form onSubmit={handleRegister}>
+        <input
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Name"
+          required
+        />
         <input
           type="email"
           value={email}

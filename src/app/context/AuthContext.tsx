@@ -88,6 +88,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [receivedRequests, setReceivedRequests] = useState<FriendRequest[]>([]);
 
   const callSendFriendRequest = httpsCallable(functions, "sendFriendRequest");
+  const callRespondToFriendRequest = httpsCallable(functions, "respondToFriendRequest");
+  const callRemoveFriend = httpsCallable(functions, "removeFriend");
+  const callCancelFriendRequest = httpsCallable(functions, "cancelFriendRequest");
 
   useEffect(() => {
     if (!auth) {
@@ -264,48 +267,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   async function respondToFriendRequest(
     requestId: string,
     response: "accepted" | "declined"
-  ) {
+  ): Promise<void> {
     if (!currentUser) throw new Error("Not authenticated");
-
-    const requestRef = doc(firestore, "friendRequests", requestId);
-    const requestDoc = await getDoc(requestRef);
-
-    if (!requestDoc.exists() || requestDoc.data()?.to !== currentUser.uid) {
-        throw new Error("Friend request not found or you are not the recipient.");
-    }
-
-    if (response === "accepted") {
-        const senderId = requestDoc.data()?.from;
-        const batch = writeBatch(firestore);
-
-        // Add each user to the other's friends subcollection
-        batch.set(doc(firestore, "users", currentUser.uid, "friends", senderId), { createdAt: serverTimestamp() });
-        batch.set(doc(firestore, "users", senderId, "friends", currentUser.uid), { createdAt: serverTimestamp() });
-
-        // **THE FIX: Delete the friend request document after accepting**
-        batch.delete(requestRef);
-
-        await batch.commit();
-    } else { // 'declined'
-        // Just delete the request if declined
-        await deleteDoc(requestRef);
-    }
+    await callRespondToFriendRequest({ requestId, response });
   }
 
-  async function cancelFriendRequest(requestId: string) {
+  async function cancelFriendRequest(requestId: string): Promise<void> {
     if (!currentUser) throw new Error("Not authenticated");
-    const requestRef = doc(firestore, "friendRequests", requestId);
-    await deleteDoc(requestRef);
+    await callCancelFriendRequest({ requestId });
   }
 
   async function removeFriend(friendId: string): Promise<void> {
     if (!currentUser) throw new Error("Not authenticated");
-    const batch = writeBatch(firestore);
-    batch.delete(doc(firestore, "users", currentUser.uid, "friends", friendId));
-    batch.delete(doc(firestore, "users", friendId, "friends", currentUser.uid));
-    await batch.commit();
+    // Call the cloud function instead of performing the batch write on the client
+    await callRemoveFriend({ friendId });
   }
-
 
   const contextValue: AuthContextType = {
     currentUser,

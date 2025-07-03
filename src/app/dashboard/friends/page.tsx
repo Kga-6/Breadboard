@@ -20,6 +20,7 @@ export default function Friends() {
     receivedRequests,
     sendFriendRequest,
     respondToFriendRequest,
+    cancelFriendRequest,
     removeFriend,
     loading,
   } = useAuth();
@@ -270,7 +271,7 @@ export default function Friends() {
                     <span className="font-medium">{req.username}</span>
                   </div>
                   <button
-                    onClick={() => handleRequestResponse(req.id, "declined")}
+                    onClick={() => cancelFriendRequest(req.id)}
                     className="text-gray-400 text-sm hover:text-red-500"
                   >
                     Cancel

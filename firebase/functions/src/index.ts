@@ -94,6 +94,52 @@ export const sendFriendRequest = functions.https.onCall(async (data, context) =>
     );
   }
 
+  // ------------------------------------------------------------------
+  // --- START: NEW VALIDATION LOGIC ---
+  // ------------------------------------------------------------------
+
+  // 1. Check if they are already friends
+  const friendDoc = await db
+    .collection("users")
+    .doc(senderId)
+    .collection("friends")
+    .doc(recipientId)
+    .get();
+
+  if (friendDoc.exists) {
+    throw new functions.https.HttpsError(
+      "already-exists",
+      "You are already friends with this user."
+    );
+  }
+
+  // 2. Check for an existing request in either direction
+  const requestQuery1 = db
+    .collection("friendRequests")
+    .where("from", "==", senderId)
+    .where("to", "==", recipientId);
+    
+  const requestQuery2 = db
+    .collection("friendRequests")
+    .where("from", "==", recipientId)
+    .where("to", "==", senderId);
+
+  const [snapshot1, snapshot2] = await Promise.all([
+    requestQuery1.get(),
+    requestQuery2.get(),
+  ]);
+
+  if (!snapshot1.empty || !snapshot2.empty) {
+    throw new functions.https.HttpsError(
+      "already-exists",
+      "A friend request has already been sent."
+    );
+  }
+
+  // ------------------------------------------------------------------
+  // --- END: NEW VALIDATION LOGIC ---
+  // ------------------------------------------------------------------
+
   const friendRequestRef = db.collection("friendRequests").doc();
   await friendRequestRef.set({
     from: senderId,
@@ -151,3 +197,73 @@ export const respondToFriendRequest = functions.https.onCall(
     }
   }
 );
+
+export const removeFriend = functions.https.onCall(async (data, context) => {
+  const userId = context.auth?.uid;
+  const { friendId } = data;
+
+  if (!userId) {
+    throw new functions.https.HttpsError(
+      "unauthenticated",
+      "You must be logged in to remove a friend."
+    );
+  }
+
+  if (!friendId) {
+    throw new functions.https.HttpsError(
+      "invalid-argument",
+      "Friend ID is required."
+    );
+  }
+
+  const batch = db.batch();
+
+  // Delete the friend from both users' friends subcollections
+  const userFriendRef = db.collection("users").doc(userId).collection("friends").doc(friendId);
+  const friendUserRef = db.collection("users").doc(friendId).collection("friends").doc(userId);
+
+  batch.delete(userFriendRef);
+  batch.delete(friendUserRef);
+
+  await batch.commit();
+
+  return { success: true, message: "Friend removed successfully." };
+});
+
+export const cancelFriendRequest = functions.https.onCall(async (data, context) => {
+  const userId = context.auth?.uid;
+  const { requestId } = data;
+
+  if (!userId) {
+    throw new functions.https.HttpsError(
+      "unauthenticated",
+      "You must be logged in."
+    );
+  }
+
+  if (!requestId) {
+    throw new functions.https.HttpsError(
+      "invalid-argument",
+      "Request ID is required."
+    );
+  }
+
+  const requestRef = db.collection("friendRequests").doc(requestId);
+  const requestDoc = await requestRef.get();
+
+  if (!requestDoc.exists) {
+    throw new functions.https.HttpsError("not-found", "Friend request not found.");
+  }
+
+  // Security Check: Only the sender can cancel the request.
+  if (requestDoc.data()?.from !== userId) {
+    throw new functions.https.HttpsError(
+      "permission-denied",
+      "You do not have permission to cancel this friend request."
+    );
+  }
+
+  await requestRef.delete();
+
+  return { success: true, message: "Friend request canceled." };
+});
