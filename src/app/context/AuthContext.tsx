@@ -1,6 +1,6 @@
 "use client";
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
-import { GoogleAuthProvider, onAuthStateChanged, signInWithPopup, User } from "firebase/auth";
+import { GoogleAuthProvider, onAuthStateChanged, signInWithPopup, User, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
 import { auth, firestore, functions } from "../../../firebase/client";
 import {
   collection,
@@ -16,7 +16,7 @@ import {
   deleteDoc, // Import deleteDoc
 } from "firebase/firestore";
 import { httpsCallable } from "firebase/functions";
-
+import { useRouter, usePathname } from "next/navigation";
 import Cookies from "js-cookie";
 
 export function getAuthToken():String | undefined {
@@ -35,6 +35,7 @@ type UserType = {
   uid?: string;
   name: string | null;
   email: string | null;
+  username: string | null;
   isPro?: boolean;
   photoURL: string | null;
   lastSeen?: any;
@@ -43,6 +44,7 @@ type UserType = {
 
 type Friend = {
   id: string;
+  name: string;
   username: string;
   online: boolean;
   photoURL: string | null;
@@ -50,6 +52,7 @@ type Friend = {
 
 type FriendRequest = {
   id: string;
+  name: string;
   username: string;
   from: string;
   photoURL: string | null;
@@ -66,6 +69,8 @@ interface AuthContextType {
   receivedRequests: FriendRequest[];
   loginGoogle: () => Promise<void>;
   logout: () => Promise<void>;
+  loginEmail: (email: string, password: string) => Promise<{ success: boolean; msg?: any }>;
+  registerEmail: (email: string, password: string) => Promise<{ success: boolean; msg?: any }>;
   sendFriendRequest: (recipientEmail: string) => Promise<any>;
   respondToFriendRequest: (
     requestId: string,
@@ -91,6 +96,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const callRespondToFriendRequest = httpsCallable(functions, "respondToFriendRequest");
   const callRemoveFriend = httpsCallable(functions, "removeFriend");
   const callCancelFriendRequest = httpsCallable(functions, "cancelFriendRequest");
+
+  const router = useRouter();
+  const pathname = usePathname(); // Get the current URL path
+
+  // This effect handles redirecting the user if they are logged in
+  useEffect(() => {
+    // If we are done loading and have user data
+    if (!loading && userData) {
+      // And the user is on the login or register page
+      if (pathname === '/login' || pathname === '/register') {
+        // Redirect them to the dashboard
+        router.replace('/dashboard/home');
+      }
+    }
+  }, [userData, loading, pathname, router]);
 
   useEffect(() => {
     if (!auth) {
@@ -154,7 +174,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               const friendUserData = friendUserSnap.data();
               friendsList.push({
                 id: friendDoc.id,
-                username: friendUserData.name || "Anonymous",
+                name: friendUserData.name || "Unknown",
+                username: friendUserData.username || "Unknown",
                 online: friendUserData.online || false,
                 photoURL: friendUserData.photoURL || null,
               });
@@ -180,7 +201,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               const recipientData = recipientSnap.data();
               requests.push({
                 id: reqDoc.id,
-                username: recipientData.name || "Anonymous",
+                name: recipientData.name || "Unknown",
+                username: recipientData.username || "Unknown",
                 from: reqDoc.data().from,
                 photoURL: recipientData.photoURL || null,
               });
@@ -206,7 +228,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               const senderData = senderSnap.data();
               requests.push({
                 id: reqDoc.id,
-                username: senderData.name || "Anonymous",
+                name: senderData.name || "Unknown",
+                username: senderData.username || "Unknown",
                 from: reqDoc.data().from,
                 photoURL: senderData.photoURL || null,
               });
@@ -242,6 +265,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     })
   }
 
+  const loginEmail = async (email: string, password: string) => {
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      return { success: true };
+    } catch (error: any) {
+      let msg = error.message;
+      if (msg.includes("auth/invalid-email")) msg = "Invalid email";
+      if (msg.includes("auth/user-not-found")) msg = "User not found";
+      return { success: false, msg };
+    }
+  };
+
+  const registerEmail = async (email: string, password: string) => {
+    try {
+      await createUserWithEmailAndPassword(auth, email, password);
+      return { success: true };
+    } catch (error: any) {
+      let msg = error.message;
+      if (msg.includes("auth/email-already-in-use")) msg = "Email already in use";
+      return { success: false, msg };
+    }
+  };
+
   function logout(): Promise<void> {
     return new Promise((resolve,reject) => {
       if(!auth){
@@ -260,8 +306,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     })
   }
 
-  async function sendFriendRequest(recipientEmail: string) {
-    return callSendFriendRequest({ recipientEmail });
+  async function sendFriendRequest(recipientUsername: string) {
+    return callSendFriendRequest({ recipientUsername });
   }
 
   async function respondToFriendRequest(
@@ -294,6 +340,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     receivedRequests,
     loginGoogle,
     logout,
+    loginEmail,
+    registerEmail,
     sendFriendRequest,
     respondToFriendRequest,
     removeFriend,

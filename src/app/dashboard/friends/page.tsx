@@ -27,18 +27,18 @@ export default function Friends() {
 
   const [tab, setTab] = useState<"all" | "pending" | "online" | "add">("all");
   const [search, setSearch] = useState("");
-  const [addFriendEmail, setAddFriendEmail] = useState("");
+  const [addFriendUsername, setAddFriendUsername] = useState("");
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
   const handleSendRequest = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!addFriendEmail) return;
+    if (!addFriendUsername) return;
     setError("");
     setMessage("");
     try {
-      await sendFriendRequest(addFriendEmail);
-      setAddFriendEmail("");
+      await sendFriendRequest(addFriendUsername);
+      setAddFriendUsername("");
       setMessage("Friend request sent!");
     } catch (err: any) {
       console.error(err);
@@ -91,7 +91,10 @@ export default function Friends() {
                 height={40}
                 className="rounded-full"
               />
-              <span className="font-medium">{friend.username}</span>
+              <div className="flex-col">
+                <div className="font-bold">{friend.name}</div>
+                <div className="font-medium text-sm">@{friend.username}</div>
+              </div>
             </div>
             <div className="flex items-center gap-4">
               <span
@@ -219,7 +222,10 @@ export default function Friends() {
                         height={40}
                         className="rounded-full"
                       />
-                      <span className="font-medium">{req.username}</span>
+                      <div className="flex-col">
+                        <div className="font-bold">{req.name}</div>
+                        <div className="font-medium text-sm">@{req.username}</div>
+                      </div>
                     </div>
                     <div className="flex gap-2">
                       <button
@@ -268,7 +274,10 @@ export default function Friends() {
                       height={40}
                       className="rounded-full"
                     />
-                    <span className="font-medium">{req.username}</span>
+                    <div className="flex-col">
+                      <div className="font-bold">{req.name}</div>
+                      <div className="font-medium text-sm">@{req.username}</div>
+                    </div>
                   </div>
                   <button
                     onClick={() => cancelFriendRequest(req.id)}
@@ -285,14 +294,14 @@ export default function Friends() {
         {tab === "add" && (
           <form onSubmit={handleSendRequest} className="flex flex-col gap-4">
             <label htmlFor="add-friend-email" className="font-medium">
-              Add Friend by Email
+              Add Friend by Username
             </label>
             <input
               id="add-friend-email"
-              type="email"
-              placeholder="Enter user's email"
-              value={addFriendEmail}
-              onChange={(e) => setAddFriendEmail(e.target.value)}
+              type="text"
+              placeholder="Enter username"
+              value={addFriendUsername}
+              onChange={(e) => setAddFriendUsername(e.target.value)}
               className="p-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
             />
             <button

@@ -8,8 +8,6 @@ export default function DashHeader(){
   const {currentUser, userData, logout, isPro, isAdmin} = useAuth();
   const router = useRouter();
 
-  console.log(userData)
-
   const handleLogout = () => {
     logout()
       .then(()=>{
@@ -47,7 +45,7 @@ export default function DashHeader(){
           )}
 
           <div className="ml-2">
-            {currentUser.displayName}
+            {userData?.username}
           </div>
 
           <button className="ml-2 font-bold" onClick={handleLogout}>| Sign out</button>

@@ -5,19 +5,21 @@ import { useState } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../../../../firebase/client";
 import Link from "next/link";
+import { useAuth } from "@/app/context/AuthContext"
 import { useRouter } from "next/navigation";
 
 export default function Login() {
+
+  const {loginEmail} = useAuth();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      router.replace("/dashboard/home");
+      await loginEmail(email, password);
     } catch (err: any) {
       setError(err.message);
     }

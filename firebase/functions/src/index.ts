@@ -1,6 +1,6 @@
 import * as functions from "firebase-functions/v1";
 import { initializeApp } from "firebase-admin/app";
-import { getFirestore, FieldValue } from "firebase-admin/firestore";
+import { getFirestore, FieldValue, Firestore } from "firebase-admin/firestore";
 import { getAuth } from "firebase-admin/auth";
 
 initializeApp();
@@ -9,60 +9,91 @@ const db = getFirestore();
 
 // Define admin/pro emails (consider moving to environment variables)
 const ADMIN_EMAILS = ["admin@example.com"];
-const PRO_EMAILS = ["pro@example.com"];
+const PRO_EMAILS = ["pro2@example.com"];
+
+const generateUniqueUsername = async (displayName:string, database: Firestore) => {
+  // Use the display name or 'user' as a base, remove spaces, and convert to lowercase
+  const baseUsername = (displayName || "user").replace(/\s/g, "").toLowerCase();
+  let username = "";
+  let isUnique = false;
+  let attempts = 0;
+
+  while (!isUnique && attempts < 10) { // Limit attempts to prevent infinite loops
+    // Append a random 6-digit number
+    const randomSuffix = Math.floor(10000000000000 + Math.random() * 90000000000000);
+    username = `${baseUsername}${randomSuffix}`;
+
+    // Check if the username already exists in the 'users' collection
+    const userSnapshot = await database.collection("users").where("username", "==", username).get();
+    if (userSnapshot.empty) {
+      isUnique = true;
+    }
+    attempts++;
+  }
+
+  // Fallback in the rare case of 10 collisions
+  if (!isUnique) {
+    username = `${baseUsername}${Date.now()}`;
+  }
+
+  return username;
+};
 
 export const onUserCreate = functions.auth.user().onCreate(async (user) => {
-  // Validate required user data
-  if (!user?.email || !user?.uid) {
-    console.error("Missing required user data:", { 
-      email: user?.email, 
-      uid: user?.uid 
-    });
-    return;
-  }
+  // **FIXED**: displayName is no longer required here.
+  if (!user?.email || !user?.uid) {
+    console.error("Missing required user data:", {
+      email: user?.email,
+      uid: user?.uid,
+    });
+    return;
+  }
 
-  try {
-    const isAdmin = ADMIN_EMAILS.includes(user.email);
-    const isPro = isAdmin || PRO_EMAILS.includes(user.email);
+  try {
+    const isAdmin = ADMIN_EMAILS.includes(user.email);
+    const isPro = isAdmin || PRO_EMAILS.includes(user.email);
 
-    // Create user document with isPro flag
-    await db.doc(`users/${user.uid}`).set({
-      uid: user.uid,
-      email: user.email,
-      name: user.displayName || "New User",
-      photoURL: user.photoURL || null,
-      isPro: isPro,
-      online: false,
-      lastSeen: FieldValue.serverTimestamp(),
-    });
+    // Generate the unique username
+    // This will now use the displayName if it's available, or "user" as a fallback.
+    const username = await generateUniqueUsername(user.displayName || "user", db);
 
-    console.log(`User document created for ${user.email} with isPro: ${isPro}`);
+    // Create user document with the new username and isPro flag
+    await db.doc(`users/${user.uid}`).set({
+      uid: user.uid,
+      email: user.email,
+      name: user.displayName || "Unknown", // Your existing fallback works perfectly
+      username: username,
+      photoURL: user.photoURL || null,
+      isPro: isPro,
+      online: false,
+      lastSeen: FieldValue.serverTimestamp(),
+    });
 
-    // Set custom claims for admin users
-    if (isAdmin) {
-      await getAuth().setCustomUserClaims(user.uid, { 
-        role: "admin",
-        isPro: true 
-      });
-      console.log(`Admin custom claims set for ${user.email}`);
-    } else if (isPro) {
-      await getAuth().setCustomUserClaims(user.uid, { 
-        isPro: true 
-      });
-      console.log(`Pro custom claims set for ${user.email}`);
-    }
+    console.log(`User document created for ${user.email} with username: ${username} and isPro: ${isPro}`);
 
-  } catch (error) {
-    console.error("Error in onUserCreate function:", error);
-    // Optionally re-throw to trigger retries
-    // throw error;
-  }
+    // Set custom claims for admin and pro users
+    if (isAdmin) {
+      await getAuth().setCustomUserClaims(user.uid, {
+        role: "admin",
+        isPro: true,
+      });
+      console.log(`Admin custom claims set for ${user.email}`);
+    } else if (isPro) {
+      await getAuth().setCustomUserClaims(user.uid, {
+        isPro: true,
+      });
+      console.log(`Pro custom claims set for ${user.email}`);
+    }
+  } catch (error) {
+    console.error("Error in onUserCreate function:", error);
+  }
 });
+
 
 // Friend Request Functions
 export const sendFriendRequest = functions.https.onCall(async (data, context) => {
   const senderId = context.auth?.uid;
-  const { recipientEmail } = data;
+  const { recipientUsername } = data;
 
   if (!senderId) {
     throw new functions.https.HttpsError(
@@ -73,14 +104,14 @@ export const sendFriendRequest = functions.https.onCall(async (data, context) =>
 
   const recipientQuery = await db
     .collection("users")
-    .where("email", "==", recipientEmail)
+    .where("username", "==", recipientUsername)
     .limit(1)
     .get();
 
   if (recipientQuery.empty) {
     throw new functions.https.HttpsError(
       "not-found",
-      "User with that email does not exist."
+      "Username does not exist."
     );
   }
 

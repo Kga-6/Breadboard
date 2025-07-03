@@ -1,23 +1,21 @@
 "use client";
 
 import { useState } from "react";
-import { createUserWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../../../../firebase/client";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useAuth } from "@/app/context/AuthContext"
 
 export default function Register() {
-  const [name, setName] = useState("");
+
+  const {registerEmail} = useAuth();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
-      router.push("/dashboard/home");
+      await registerEmail(email, password);
     } catch (err: any) {
       setError(err.message);
     }
@@ -27,13 +25,6 @@ export default function Register() {
     <div>
       <h1>Register</h1>
       <form onSubmit={handleRegister}>
-        <input
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Name"
-          required
-        />
         <input
           type="email"
           value={email}
