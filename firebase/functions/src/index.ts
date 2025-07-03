@@ -1,32 +1,58 @@
-/**
- * Import function triggers from their respective submodules:
- *
- * import {onCall} from "firebase-functions/v2/https";
- * import {onDocumentWritten} from "firebase-functions/v2/firestore";
- *
- * See a full list of supported triggers at https://firebase.google.com/docs/functions
- */
+import * as functions from "firebase-functions/v1";
+import { initializeApp } from "firebase-admin/app";
+import { getFirestore } from "firebase-admin/firestore";
+import { getAuth } from "firebase-admin/auth";
 
-import {setGlobalOptions} from "firebase-functions";
-import {onRequest} from "firebase-functions/https";
-import * as logger from "firebase-functions/logger";
+initializeApp();
 
-// Start writing functions
-// https://firebase.google.com/docs/functions/typescript
+const db = getFirestore();
 
-// For cost control, you can set the maximum number of containers that can be
-// running at the same time. This helps mitigate the impact of unexpected
-// traffic spikes by instead downgrading performance. This limit is a
-// per-function limit. You can override the limit for each function using the
-// `maxInstances` option in the function's options, e.g.
-// `onRequest({ maxInstances: 5 }, (req, res) => { ... })`.
-// NOTE: setGlobalOptions does not apply to functions using the v1 API. V1
-// functions should each use functions.runWith({ maxInstances: 10 }) instead.
-// In the v1 API, each function can only serve one request per container, so
-// this will be the maximum concurrent request count.
-setGlobalOptions({ maxInstances: 10 });
+// Define admin/pro emails (consider moving to environment variables)
+const ADMIN_EMAILS = ["admin@example.com"];
+const PRO_EMAILS = ["pro@example.com"];
 
-// export const helloWorld = onRequest((request, response) => {
-//   logger.info("Hello logs!", {structuredData: true});
-//   response.send("Hello from Firebase!");
-// });
+export const onUserCreate = functions.auth.user().onCreate(async (user) => {
+  // Validate required user data
+  if (!user?.email || !user?.uid) {
+    console.error("Missing required user data:", { 
+      email: user?.email, 
+      uid: user?.uid 
+    });
+    return;
+  }
+
+  try {
+    const isAdmin = ADMIN_EMAILS.includes(user.email);
+    const isPro = isAdmin || PRO_EMAILS.includes(user.email);
+
+    // Create user document with isPro flag
+    await db.doc(`users/${user.uid}`).set({
+      isPro: isPro,
+      email: user.email,
+      createdAt: new Date().toISOString(),
+      name: user.displayName || null,
+      photoURL: user.photoURL || null,
+    });
+
+    console.log(`User document created for ${user.email} with isPro: ${isPro}`);
+
+    // Set custom claims for admin users
+    if (isAdmin) {
+      await getAuth().setCustomUserClaims(user.uid, { 
+        role: "admin",
+        isPro: true 
+      });
+      console.log(`Admin custom claims set for ${user.email}`);
+    } else if (isPro) {
+      await getAuth().setCustomUserClaims(user.uid, { 
+        isPro: true 
+      });
+      console.log(`Pro custom claims set for ${user.email}`);
+    }
+
+  } catch (error) {
+    console.error("Error in onUserCreate function:", error);
+    // Optionally re-throw to trigger retries
+    // throw error;
+  }
+});

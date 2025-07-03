@@ -1,14 +1,19 @@
-export default function DashboardLayout({
+export default function HomeLayout({
   children,
-  friends
+  friends,
+  calendar
 }:{
   children: React.ReactNode;
   friends: React.ReactNode;
+  calendar: React.ReactNode;
 }){
   return(
     <div>
-      <div>{children}</div>
-      <div>{friends}</div>
+      <div>
+        <div>{children}</div>
+        <div>{friends}</div>
+        <div>{calendar}</div>
+      </div>
     </div>
   )
 }

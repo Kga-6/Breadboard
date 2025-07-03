@@ -33,6 +33,51 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isPro,setIsPro] = useState<boolean>(false);
   const [loading, setLoading] = useState(true);
 
+  useEffect(() => {
+    if (!auth) return;
+
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if(!firebaseUser){
+        setCurrentUser(null);
+        setIsAdmin(false)
+        setIsPro(false)
+        removeAuthToken();
+
+        console.log("Current user:", "Not found")
+      }
+      if(firebaseUser) {
+        const token = await firebaseUser.getIdToken();
+        setCurrentUser(firebaseUser);
+        setAuthToken(token);
+
+        // Check if is admin
+        const tokenValues = await firebaseUser.getIdTokenResult();
+        setIsAdmin(tokenValues.claims.role === "admin");
+
+        // Check if is pro
+        const userResponse = await fetch(`/api/users/${firebaseUser.uid}`, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+        if (userResponse.ok) {
+            const userJson = await userResponse.json();
+            if (userJson?.isPro) setIsPro(true);
+        } else {
+            console.error("Could not get user info");
+        }
+
+
+        setLoading(false);
+
+        console.log("Current user: ", firebaseUser)
+      }
+
+    });
+
+    return () => unsubscribe();
+  }, []);
+
   function loginGoogle(): Promise<void> {
     return new Promise((resolve,reject) => {
       if(!auth){
@@ -69,45 +114,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     })
   }
 
+  const contextValue: AuthContextType = {
+    currentUser, 
+    isAdmin,
+    isPro,
+    loginGoogle,
+    logout,
+    loading
+  }
 
-  useEffect(() => {
-    if (!auth) return;
-
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if(!user){
-        setCurrentUser(null);
-        setIsAdmin(false)
-        setIsPro(false)
-        removeAuthToken();
-      }
-      if(user) {
-        const token = await user.getIdToken();
-        setCurrentUser(user);
-        setAuthToken(token);
-
-        setLoading(false);
-        console.log("Current user: ", user)
-      }
-
-    });
-
-    return () => unsubscribe();
-  }, []);
-
-  return (
-    <AuthContext.Provider 
-      value={{ 
-          currentUser, 
-          isAdmin,
-          isPro,
-          loginGoogle,
-          logout,
-          loading 
-        }}
-      >
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>;
 };
 
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = (): AuthContextType => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+  return context;
+};

@@ -1,3 +1,3 @@
 export default function Jam(){
-    return <h1>Jam</h1>
+    return <h1 className="text-3xl font-bold mb-4">Jam</h1>
 }
