@@ -61,104 +61,63 @@ export const onUserCreate = functions.auth.user().onCreate(async (user) => {
 
 // Friend Request Functions
 export const sendFriendRequest = functions.https.onCall(async (data, context) => {
-  try {
-    const senderId = context.auth?.uid;
-    if (!senderId) {
-      throw new functions.https.HttpsError(
-        "unauthenticated",
-        "You must be logged in to send a friend request."
-      );
-    }
+  const senderId = context.auth?.uid;
+  const { recipientEmail } = data;
 
-    const { recipientEmail } = data;
-    if (typeof recipientEmail !== 'string' || !recipientEmail) {
-        throw new functions.https.HttpsError('invalid-argument', 'A valid email is required.');
-    }
-
-    // Find the recipient user by email
-    const recipientQuery = await db
-      .collection("users")
-      .where("email", "==", recipientEmail)
-      .limit(1)
-      .get();
-
-    if (recipientQuery.empty) {
-      throw new functions.https.HttpsError(
-        "not-found",
-        "User with that email does not exist."
-      );
-    }
-
-    const recipientId = recipientQuery.docs[0].id;
-
-    if (senderId === recipientId) {
-      throw new functions.https.HttpsError(
-        "invalid-argument",
-        "You cannot send a friend request to yourself."
-      );
-    }
-
-    // Check if they are already friends
-    const friendshipDoc = await db.collection('users').doc(senderId).collection('friends').doc(recipientId).get();
-    if(friendshipDoc.exists) {
-        throw new functions.https.HttpsError('already-exists', 'You are already friends with this user.');
-    }
-
-    // Check for an existing pending request
-    const existingRequestQuery = await db.collection('friendRequests')
-      .where('from', '==', senderId)
-      .where('to', '==', recipientId)
-      .where('status', '==', 'pending').get();
-
-    if (!existingRequestQuery.empty) {
-        throw new functions.https.HttpsError('already-exists', 'You have already sent a request to this user.');
-    }
-    
-    // Check for a pending request from the other user
-    const incomingRequestQuery = await db.collection('friendRequests')
-      .where('from', '==', recipientId)
-      .where('to', '==', senderId)
-      .where('status', '==', 'pending').get();
-
-    if (!incomingRequestQuery.empty) {
-        throw new functions.https.HttpsError('already-exists', 'This user has already sent you a friend request. Please accept or decline it.');
-    }
-
-    // Create the friend request document
-    const friendRequestRef = db.collection("friendRequests").doc();
-    await friendRequestRef.set({
-      from: senderId,
-      to: recipientId,
-      status: "pending",
-      createdAt: FieldValue.serverTimestamp(),
-    });
-
-    return { success: true, message: "Friend request sent successfully." };
-  } catch (error: any) {
-    // Log the detailed error on the server
-    console.error("Error in sendFriendRequest:", error);
-    
-    // If it's an error we threw intentionally, rethrow it
-    if (error instanceof functions.https.HttpsError) {
-      throw error;
-    }
-    
-    // For any other unexpected errors, throw a generic 'internal' error
-    throw new functions.https.HttpsError("internal", "An unexpected error occurred.");
+  if (!senderId) {
+    throw new functions.https.HttpsError(
+      "unauthenticated",
+      "You must be logged in to send a friend request."
+    );
   }
-});
 
+  const recipientQuery = await db
+    .collection("users")
+    .where("email", "==", recipientEmail)
+    .limit(1)
+    .get();
+
+  if (recipientQuery.empty) {
+    throw new functions.https.HttpsError(
+      "not-found",
+      "User with that email does not exist."
+    );
+  }
+
+  const recipient = recipientQuery.docs[0];
+  const recipientId = recipient.id;
+
+  if (senderId === recipientId) {
+    throw new functions.https.HttpsError(
+      "invalid-argument",
+      "You cannot send a friend request to yourself."
+    );
+  }
+
+  const friendRequestRef = db.collection("friendRequests").doc();
+  await friendRequestRef.set({
+    from: senderId,
+    to: recipientId,
+    status: "pending",
+    createdAt: new Date().toISOString(),
+  });
+
+  return { success: true };
+});
 
 export const respondToFriendRequest = functions.https.onCall(
   async (data, context) => {
     const userId = context.auth?.uid;
-    const { requestId, response } = data; // response can be 'accepted' or 'declined'
-
     if (!userId) {
       throw new functions.https.HttpsError(
         "unauthenticated",
-        "You must be logged in to respond to a friend request."
+        "You must be logged in."
       );
+    }
+
+    const { requestId, response } = data;
+    if (!requestId || (response !== 'accepted' && response !== 'declined')) {
+        throw new functions.https.HttpsError('invalid-argument', 'Invalid request data.');
     }
 
     const requestRef = db.collection("friendRequests").doc(requestId);
@@ -167,21 +126,28 @@ export const respondToFriendRequest = functions.https.onCall(
     if (!requestDoc.exists || requestDoc.data()?.to !== userId) {
       throw new functions.https.HttpsError(
         "not-found",
-        "Friend request not found."
+        "Friend request not found or you are not the recipient."
       );
     }
 
+    // THE FIX: The Cloud Function now handles all database writes.
     if (response === "accepted") {
       const senderId = requestDoc.data()?.from;
       const batch = db.batch();
-      batch.update(requestRef, { status: "accepted" });
-      batch.set(db.collection("users").doc(userId).collection("friends").doc(senderId),{});
-      batch.set(db.collection("users").doc(senderId).collection("friends").doc(userId),{});
-      await batch.commit();
-    } else {
-      await requestRef.update({ status: "declined" });
-    }
 
-    return { success: true };
+      // Add each user to the other's friends subcollection
+      batch.set(db.collection("users").doc(userId).collection("friends").doc(senderId), { createdAt: FieldValue.serverTimestamp() });
+      batch.set(db.collection("users").doc(senderId).collection("friends").doc(userId), { createdAt: FieldValue.serverTimestamp() });
+      
+      // Delete the request document now that it's been handled
+      batch.delete(requestRef);
+      
+      await batch.commit();
+      return { success: true, message: "Friend request accepted." };
+    } else { // 'declined'
+      // If declined, just delete the request.
+      await requestRef.delete();
+      return { success: true, message: "Friend request declined." };
+    }
   }
 );
