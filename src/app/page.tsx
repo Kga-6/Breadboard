@@ -4,7 +4,7 @@ export default function Home(){
     return (
       <>
         <h1>Welcome to Breadboard</h1>
-        <Link href="/login">Login</Link>
+        <Link href="/login">Logins</Link>
       </>
     )
 }
