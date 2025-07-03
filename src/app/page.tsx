@@ -25,11 +25,14 @@ export default function Home(){
         <h1>Welcome to Breadboard</h1>
         
         {!auth?.currentUser && (
-          <Link href="/login">Login</Link>
+          <>
+            <Link href="/login">Login</Link>
+            <button onClick={loginGoogle}>Use Google</button>
+          </>
         )}
 
-        {!auth?.currentUser && (
-          <button onClick={loginGoogle}>Use Google</button>
+        {auth?.currentUser && (
+          <Link href="/home">Dashboard</Link>
         )}
         
       </>
