@@ -2,7 +2,8 @@
 
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth, Auth, connectAuthEmulator } from "firebase/auth";
-
+import { getFirestore, Firestore, connectFirestoreEmulator } from "firebase/firestore";
+import { getFunctions, Functions, connectFunctionsEmulator } from "firebase/functions";
 
 const firebaseConfig = {
   apiKey: "AIzaSyC-nX_G4Hv3cNOo8sQJnOiHa5N16p3f514",
@@ -15,32 +16,25 @@ const firebaseConfig = {
 };
 
 
-let auth:Auth | undefined = undefined
+const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 
-const currentApps = getApps();
-if(currentApps.length <=0 ){
-  const app = initializeApp(firebaseConfig);
-  auth = getAuth(app);
-  if(
-    process.env.NEXT_PUBLIC_APP_ENV === "emulator" &&
-    process.env.NEXT_PUBLIC_EMULATOR_AUTH_PATH
-  ) {
-    connectAuthEmulator(
-      auth,
-      `http://${process.env.NEXT_PUBLIC_EMULATOR_AUTH_PATH}`
-    )
-  }
-}else{
-  auth = getAuth(currentApps[0]);
-  if(
-    process.env.NEXT_PUBLIC_APP_ENV === "emulator" &&
-    process.env.NEXT_PUBLIC_EMULATOR_AUTH_PATH
-  ) {
-    connectAuthEmulator(
-      auth,
-      `http://${process.env.NEXT_PUBLIC_EMULATOR_AUTH_PATH}`
-    )
-  }
+const auth: Auth = getAuth(app);
+const firestore: Firestore = getFirestore(app);
+const functions: Functions = getFunctions(app);
+
+// Connect to emulators if in a development environment
+// This check ensures you only use emulators locally
+if (process.env.NODE_ENV === 'development') {
+    console.log("Connecting to Firebase Emulators...");
+    try {
+        connectAuthEmulator(auth, "http://127.0.0.1:9099", { disableWarnings: true });
+        connectFirestoreEmulator(firestore, '127.0.0.1', 8080);
+        connectFunctionsEmulator(functions, '127.0.0.1', 5001);
+        console.log("Successfully connected to emulators.");
+    } catch (error) {
+        console.error("Error connecting to emulators:", error);
+    }
 }
 
-export { auth }
+// Export the initialized services
+export { auth, firestore, functions };

@@ -5,8 +5,10 @@ import { useRouter } from "next/navigation";
 
 export default function DashHeader(){
 
-  const {currentUser, logout, isPro, isAdmin} = useAuth();
+  const {currentUser, userData, logout, isPro, isAdmin} = useAuth();
   const router = useRouter();
+
+  console.log(userData)
 
   const handleLogout = () => {
     logout()
