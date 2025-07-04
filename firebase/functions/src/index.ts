@@ -8,7 +8,7 @@ initializeApp();
 const db = getFirestore();
 
 // Define admin/pro emails (consider moving to environment variables)
-const ADMIN_EMAILS = ["admin@example.com"];
+const ADMIN_EMAILS = ["admin@example.com","Kguerrero0325@gmail.com"];
 const PRO_EMAILS = ["pro2@example.com"];
 
 const generateUniqueUsername = async (displayName:string, database: Firestore) => {
@@ -63,7 +63,7 @@ export const onUserCreate = functions.auth.user().onCreate(async (user) => {
       email: user.email,
       name: user.displayName || "Unknown", // Your existing fallback works perfectly
       username: username,
-      photoURL: user.photoURL || null,
+      profilePictureUrl: user.photoURL || null,
       isPro: isPro,
       online: false,
       lastSeen: FieldValue.serverTimestamp(),
