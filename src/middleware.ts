@@ -6,7 +6,7 @@ export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // take to welcome page if user not found
-  if (!token && pathname.startsWith('/dashboard')) {
+  if (!token && pathname.startsWith('/app')) {
     // If no token, redirect to the homepage
     return NextResponse.redirect(new URL('/', request.url))
   }

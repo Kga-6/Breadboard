@@ -58,6 +58,13 @@ type FriendRequest = {
   photoURL: string | null;
 };
 
+type Jam = {
+  id: string;
+  name: string;
+  ownerId: string;
+  lastModified: any;
+};
+
 interface AuthContextType {
   currentUser: User | null;
   userData: UserType | null;
@@ -67,6 +74,8 @@ interface AuthContextType {
   friends: Friend[];
   sentRequests: FriendRequest[];
   receivedRequests: FriendRequest[];
+  jams: Jam[];
+  createJam: () => Promise<string | null>;
   loginGoogle: () => Promise<void>;
   logout: () => Promise<void>;
   loginEmail: (email: string, password: string) => Promise<{ success: boolean; msg?: any }>;
@@ -91,14 +100,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [friends, setFriends] = useState<Friend[]>([]);
   const [sentRequests, setSentRequests] = useState<FriendRequest[]>([]);
   const [receivedRequests, setReceivedRequests] = useState<FriendRequest[]>([]);
+  const [jams, setJams] = useState<Jam[]>([]);
 
   const callSendFriendRequest = httpsCallable(functions, "sendFriendRequest");
   const callRespondToFriendRequest = httpsCallable(functions, "respondToFriendRequest");
   const callRemoveFriend = httpsCallable(functions, "removeFriend");
   const callCancelFriendRequest = httpsCallable(functions, "cancelFriendRequest");
+  const callCreateJam = httpsCallable(functions, "createJam");
 
   const router = useRouter();
-  const pathname = usePathname(); // Get the current URL path
+  const pathname = usePathname();
 
   // This effect handles redirecting the user if they are logged in
   useEffect(() => {
@@ -107,12 +118,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // And the user is on the login or register page
       if (pathname === '/login' || pathname === '/register') {
         // Redirect them to the dashboard
-        router.replace('/dashboard/home');
+        router.replace('/app/home');
       }
     }
-  }, [userData, loading, pathname, router]);
+  }, [currentUser, userData, loading, pathname, router]);
 
   useEffect(() => {
+    setLoading(true);
+
     if (!auth) {
       setLoading(false);
       return;
@@ -133,22 +146,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setFriends([]);
         setSentRequests([]);
         setReceivedRequests([]);
+        setJams([]);
         removeAuthToken();
         setLoading(false);
       } else {
-        setLoading(true);
         const token = await firebaseUser.getIdToken();
-        setCurrentUser(firebaseUser);
         setAuthToken(token);
+        setCurrentUser(firebaseUser);
 
         const tokenValues = await firebaseUser.getIdTokenResult();
         setIsAdmin(tokenValues.claims.role === "admin");
 
-        const userRef = doc(firestore, "users", firebaseUser.uid);
+        const userRef = await doc(firestore, "users", firebaseUser.uid);
         //await updateDoc(userRef, { online: true });
 
-        // --- Attach All Real-time Listeners ---
-        // User Data Listener
+        console.log("Authenticated",firebaseUser)
+
         const unsubUser = onSnapshot(userRef, (doc) => {
           if (doc.exists()) {
             const data = doc.data() as UserType;
@@ -161,6 +174,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setLoading(false);
         });
         unsubscribers.push(unsubUser);
+
+        // Jams Listener
+        const jamsQuery = query(
+          collection(firestore, "jams"),
+          where("authorId", "==", firebaseUser.uid)
+        );
+        const unsubJams = onSnapshot(jamsQuery, (snapshot) => {
+          const jamsList: Jam[] = snapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          } as Jam));
+          setJams(jamsList);
+        });
+        unsubscribers.push(unsubJams);
 
         // Friends List Listener
         const friendsRef = collection(userRef, "friends");
@@ -329,6 +356,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     await callRemoveFriend({ friendId });
   }
 
+  async function createJam(): Promise<string | null> {
+    if (!currentUser) {
+      throw new Error("Not authenticated");
+    }
+    try {
+      const result = (await callCreateJam()) as { data: { success: boolean, jamId: string }};
+      if (result.data.success) {
+        console.log("Jam created with ID:", result.data.jamId);
+        return result.data.jamId;
+      }
+      return null;
+    } catch (error) {
+      console.error("Error creating jam:", error);
+      return null;
+    }
+  }
+
   const contextValue: AuthContextType = {
     currentUser,
     userData,
@@ -338,6 +382,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     friends,
     sentRequests,
     receivedRequests,
+    jams,
     loginGoogle,
     logout,
     loginEmail,
@@ -346,6 +391,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     respondToFriendRequest,
     removeFriend,
     cancelFriendRequest,
+    createJam,
   };
 
   return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>;

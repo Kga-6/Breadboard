@@ -10,7 +10,7 @@ import { useRouter } from "next/navigation";
 
 export default function Login() {
 
-  const {loginEmail} = useAuth();
+  const {loginEmail, loginGoogle} = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -23,6 +23,16 @@ export default function Login() {
     } catch (err: any) {
       setError(err.message);
     }
+  };
+
+  const handleloginGoogle = () => {
+    loginGoogle()
+      .then(() => {
+          console.log("Logged in!");
+      })
+      .catch(() => {
+          console.error("Something went wrong");
+      });
   };
 
   return (
@@ -49,6 +59,7 @@ export default function Login() {
       <Link href="/register">Don't have an account? Register</Link>
       <br />
       <Link href="/forgot-password">Forgot Password?</Link>
+      <button onClick={handleloginGoogle}>Use Google</button>
     </div>
   );
 }

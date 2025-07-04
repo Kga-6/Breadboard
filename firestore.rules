@@ -29,5 +29,13 @@ service cloud.firestore {
       // Allow the recipient to update (accept/decline) or the sender to delete (cancel)
       allow update, delete: if request.auth != null && (request.auth.uid == resource.data.to || request.auth.uid == resource.data.from);
     }
+
+    match /jams/{jamId} {
+      // Allow create if the user is logged in and setting themselves as the author.
+      allow create: if request.auth != null && request.resource.data.authorId == request.auth.uid;
+
+      // Allow read, update, or delete if the user is the author.
+      allow read, update, delete: if request.auth != null && resource.data.authorId == request.auth.uid;
+    }
   }
 }

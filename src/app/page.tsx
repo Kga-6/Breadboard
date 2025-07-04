@@ -7,34 +7,23 @@ import { useRouter } from "next/navigation";
 export default function Home(){
 
     const auth = useAuth();
-    const router = useRouter();
-
-    const loginGoogle = () => {
-      auth?.loginGoogle()
-        .then(() => {
-            console.log("Logged in!");
-            router.replace("/dashboard/home");
-        })
-        .catch(() => {
-            console.error("Something went wrong");
-        });
-    };
 
     return (
-      <>
-        <h1>Welcome to Breadboard</h1>
+      <div className="flex justify-between p-4">
+        <h1 className="text-2xl font-bold">Breadboard</h1>
         
-        {!auth?.currentUser && (
-          <>
-            <Link href="/login">Login</Link>
-            <button onClick={loginGoogle}>Use Google</button>
-          </>
-        )}
+        <div>
+          {!auth?.currentUser && (
+            <>
+              <Link className="font-bold" href="/login">Login</Link>
+            </>
+          )}
 
-        {auth?.currentUser && (
-          <Link href="/dashboard/home">Dashboard</Link>
-        )}
+          {auth?.currentUser && (
+            <Link href="/app/home">START</Link>
+          )}
+        </div>
         
-      </>
+      </div>
     )
 }

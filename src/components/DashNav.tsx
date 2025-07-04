@@ -8,12 +8,12 @@ export default function DashNav() {
   const pathname = usePathname();
 
   const links = [
-    { href: "/dashboard/home", label: "Home" },
-    { href: "/dashboard/friends", label: "Friends" },
-    { href: "/dashboard/chat", label: "Chat" },
-    { href: "/dashboard/jam", label: "Jam" },
-    { href: "/dashboard/calendar", label: "Calendar" },
-    { href: "/dashboard/admin", label: "Admin" },
+    { href: "/app/home", label: "Home" },
+    { href: "/app/friends", label: "Friends" },
+    { href: "/app/chat", label: "Chat" },
+    { href: "/app/jam", label: "Jam" },
+    { href: "/app/calendar", label: "Calendar" },
+    { href: "/app/admin", label: "Admin" },
   ];
 
   return (

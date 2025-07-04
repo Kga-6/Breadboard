@@ -89,7 +89,6 @@ export const onUserCreate = functions.auth.user().onCreate(async (user) => {
   }
 });
 
-
 // Friend Request Functions
 export const sendFriendRequest = functions.https.onCall(async (data, context) => {
   const senderId = context.auth?.uid;
@@ -297,4 +296,28 @@ export const cancelFriendRequest = functions.https.onCall(async (data, context) 
   await requestRef.delete();
 
   return { success: true, message: "Friend request canceled." };
+});
+
+// JAM
+export const createJam = functions.https.onCall(async (data, context) => {
+  const userId = context.auth?.uid;
+
+  if (!userId) {
+    throw new functions.https.HttpsError(
+      "unauthenticated",
+      "You must be logged in to create a jam."
+    );
+  }
+
+  const newJamRef = await db.collection("jams").add({
+    name: "Untitled Jam",
+    authorId: userId,
+    createdAt: FieldValue.serverTimestamp(),
+    lastModified: FieldValue.serverTimestamp(),
+    content: "{}", // Start with empty content
+    isPublic: false,
+    sharedWith: [], // Initially shared with no one
+  });
+
+  return { success: true, jamId: newJamRef.id };
 });
