@@ -64,14 +64,6 @@ export default function Friends() {
 
   const onlineFriends = filteredFriends.filter((f) => f.online);
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-full">
-        <div className="text-lg font-semibold">Loading Friends...</div>
-      </div>
-    );
-  }
-
   const renderFriendList = (list: typeof friends) => (
     <ul className="space-y-3">
       {list.length > 0 ? (

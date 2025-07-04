@@ -8,13 +8,27 @@ interface CanvasProps{
   jamId:string;
 }
 
+import { useOthers, useSelf } from "@liveblocks/react/suspense";
+
+export function CollaborativeApp() {
+  const others = useOthers();
+  const userCount = others.length;
+  return <div>There are {userCount} other user(s) online</div>;
+}
+
 export default function Canvas({jamId}:CanvasProps){
+
+  const { name, avatar, username } = useSelf((me) => me.info);
+
+  console.log(name, avatar, username)
+
   return(
     <main
       className="h-full w-full relative bg-neutral-100 touch-none"
     >
       <Info/>
       <Participants/>
+      <CollaborativeApp/>
       <Toolbar/>
     </main>
   )

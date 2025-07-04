@@ -301,7 +301,7 @@ export const cancelFriendRequest = functions.https.onCall(async (data, context) 
 // JAM
 export const createJam = functions.https.onCall(async (data, context) => {
   const userId = context.auth?.uid;
-
+  
   if (!userId) {
     throw new functions.https.HttpsError(
       "unauthenticated",
@@ -309,15 +309,79 @@ export const createJam = functions.https.onCall(async (data, context) => {
     );
   }
 
-  const newJamRef = await db.collection("jams").add({
-    name: "Untitled Jam",
-    authorId: userId,
+  const newJamRef = db.collection("jams").doc();
+
+  await newJamRef.set({
+    title: "Untitled",
+    thumbnailURL: "",
+    authorId: userId, // Keep authorId for reference
     createdAt: FieldValue.serverTimestamp(),
     lastModified: FieldValue.serverTimestamp(),
     content: "{}", // Start with empty content
     isPublic: false,
-    sharedWith: [], // Initially shared with no one
+    publicAccess: "viewer", // Default public access role
+    permissions: {
+      [userId]: "owner", // Set creator as owner in the map
+    },
   });
 
-  return { success: true, jamId: newJamRef.id };
+  return {
+    success: true,
+    jamId: newJamRef.id
+  };
+});
+
+export const manageJamPermissions = functions.https.onCall(async (data, context) => {
+  const callerId = context.auth?.uid;
+  const {
+    jamId,
+    targetUsername,
+    role
+  } = data; // role can be 'editor', 'viewer', or 'remove'
+
+  if (!callerId) {
+    throw new functions.https.HttpsError("unauthenticated", "You must be logged in.");
+  }
+  if (!jamId || !targetUsername || !role) {
+    throw new functions.https.HttpsError("invalid-argument", "Missing required fields.");
+  }
+
+  const jamRef = db.collection("jams").doc(jamId);
+  const jamDoc = await jamRef.get();
+
+  if (!jamDoc.exists) {
+    throw new functions.https.HttpsError("not-found", "Jam not found.");
+  }
+
+  const permissions = jamDoc.data()?.permissions || {};
+  if (permissions[callerId] !== 'owner') {
+    throw new functions.https.HttpsError("permission-denied", "You must be the owner to manage permissions.");
+  }
+
+  const userQuery = await db.collection("users").where("username", "==", targetUsername).limit(1).get();
+  if (userQuery.empty) {
+    throw new functions.https.HttpsError("not-found", `User '${targetUsername}' not found.`);
+  }
+  const targetUserId = userQuery.docs[0].id;
+
+  if (callerId === targetUserId) {
+    throw new functions.https.HttpsError("invalid-argument", "You cannot change your own role.");
+  }
+
+  const fieldPath = `permissions.${targetUserId}`;
+
+  if (role === 'remove') {
+    await jamRef.update({
+      [fieldPath]: FieldValue.delete(),
+    });
+  } else {
+    await jamRef.update({
+      [fieldPath]: role,
+    });
+  }
+
+  return {
+    success: true,
+    message: `Permissions updated for ${targetUsername}.`
+  };
 });

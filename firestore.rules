@@ -31,11 +31,26 @@ service cloud.firestore {
     }
 
     match /jams/{jamId} {
-      // Allow create if the user is logged in and setting themselves as the author.
-      allow create: if request.auth != null && request.resource.data.authorId == request.auth.uid;
+      // Allow creation only if the creator sets themselves as the 'owner'
+      // and is also the designated 'authorId'.
+      allow create: if request.auth != null &&
+        request.resource.data.authorId == request.auth.uid &&
+        request.resource.data.permissions[request.auth.uid] == 'owner';
 
-      // Allow read, update, or delete if the user is the author.
-      allow read, update, delete: if request.auth != null && resource.data.authorId == request.auth.uid;
+      // Allow reads if:
+      // 1. The jam is public.
+      // 2. The user has a role in the permissions map.
+      allow read: if resource.data.isPublic == true ||
+        (request.auth != null && request.auth.uid in resource.data.permissions);
+
+      // Allow updates if:
+      // 1. The jam is public and public access is 'editor'
+      // 2. The user is an 'owner' or 'editor'
+      allow update: if (resource.data.isPublic == true && resource.data.publicAccess == 'editor') ||
+        (request.auth != null && resource.data.permissions[request.auth.uid] in ['owner', 'editor']);
+
+      // Allow deletion only if the user is the owner.
+      allow delete: if request.auth != null && resource.data.permissions[request.auth.uid] == 'owner';
     }
   }
 }

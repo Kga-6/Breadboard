@@ -10,6 +10,9 @@
     "emulators": "firebase emulators:start"
   },
   "dependencies": {
+    "@liveblocks/client": "^3.0.0",
+    "@liveblocks/node": "^3.0.0",
+    "@liveblocks/react": "^3.0.0",
     "clsx": "^2.1.1",
     "firebase": "^11.10.0",
     "firebase-admin": "^13.4.0",

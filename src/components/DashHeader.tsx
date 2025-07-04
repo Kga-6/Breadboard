@@ -2,6 +2,7 @@
 
 import { useAuth } from "@/app/context/AuthContext";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 export default function DashHeader(){
 
@@ -21,7 +22,7 @@ export default function DashHeader(){
 
   return(
     <div className="flex justify-between items-center p-4 h-14 border-b">
-      <h1 className="text-2xl font-bold">Breadboard</h1>
+      <Link href="/" className="text-2xl font-bold">Breadboard</Link>
       
       {currentUser && (
         <div className="flex">

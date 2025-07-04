@@ -1,5 +1,5 @@
-import { Metadata } from "next"
 import Canvas from "./_components/canvas";
+import { Room } from "@/components/room";
 
 interface JamPageProps {
   params: {
@@ -7,9 +7,13 @@ interface JamPageProps {
   }
 }
 
-export default async function Jam({params}: JamPageProps){
-    const jamId = (await params).jamId
-    return (
+export default function Jam({params}: JamPageProps){
+  const jamId = params.jamId;
+
+  console.log(jamId)
+  return (
+    <Room roomId={jamId}>
       <Canvas jamId={jamId}/>
-    )
+    </Room>
+  )
 }

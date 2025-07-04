@@ -59,10 +59,11 @@ type FriendRequest = {
 };
 
 type Jam = {
-  id: string;
-  name: string;
-  ownerId: string;
-  lastModified: any;
+  id: string;
+  title: string;
+  authorId: string;
+  authorUsername?: string; // Add this line
+  lastModified: any;
 };
 
 interface AuthContextType {
@@ -75,6 +76,7 @@ interface AuthContextType {
   sentRequests: FriendRequest[];
   receivedRequests: FriendRequest[];
   jams: Jam[];
+  manageJamPermissions: (jamId: string, targetUsername: string, role: 'editor' | 'viewer' | 'remove') => Promise < any > ;
   createJam: () => Promise<string | null>;
   loginGoogle: () => Promise<void>;
   logout: () => Promise<void>;
@@ -107,17 +109,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const callRemoveFriend = httpsCallable(functions, "removeFriend");
   const callCancelFriendRequest = httpsCallable(functions, "cancelFriendRequest");
   const callCreateJam = httpsCallable(functions, "createJam");
+  const callManageJamPermissions = httpsCallable(functions, "manageJamPermissions");
+
 
   const router = useRouter();
   const pathname = usePathname();
 
-  // This effect handles redirecting the user if they are logged in
   useEffect(() => {
-    // If we are done loading and have user data
     if (!loading && userData) {
-      // And the user is on the login or register page
       if (pathname === '/login' || pathname === '/register') {
-        // Redirect them to the dashboard
         router.replace('/app/home');
       }
     }
@@ -176,16 +176,36 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         unsubscribers.push(unsubUser);
 
         // Jams Listener
+        const userPermissionField = `permissions.${firebaseUser.uid}`;
         const jamsQuery = query(
-          collection(firestore, "jams"),
-          where("authorId", "==", firebaseUser.uid)
+          collection(firestore, "jams"),
+          where(userPermissionField, "in", ["owner", "editor", "viewer"])
         );
-        const unsubJams = onSnapshot(jamsQuery, (snapshot) => {
-          const jamsList: Jam[] = snapshot.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-          } as Jam));
-          setJams(jamsList);
+        const unsubJams = onSnapshot(jamsQuery, async (snapshot) => { // Make callback async
+          const jamsListPromises = snapshot.docs.map(async (jamDoc) => {
+            const jamData = jamDoc.data();
+            let authorUsername = "Unknown"; // Default username
+
+            if (jamData.authorId) {
+              const authorDocRef = doc(firestore, "users", jamData.authorId);
+              const authorDocSnap = await getDoc(authorDocRef);
+              if (authorDocSnap.exists()) {
+                authorUsername = authorDocSnap.data().username || "Unknown";
+              }
+            }
+
+            return {
+              id: jamDoc.id,
+              ...jamData,
+              authorUsername, // Add the fetched username
+            } as Jam;
+          });
+
+          const jamsList = await Promise.all(jamsListPromises);
+          setJams(jamsList);
+
+        }, (error) => {
+          console.error("Jams listener error:", error);
         });
         unsubscribers.push(unsubJams);
 
@@ -356,12 +376,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     await callRemoveFriend({ friendId });
   }
 
-  async function createJam(): Promise<string | null> {
+  async function createJam(): Promise < string | null > {
     if (!currentUser) {
       throw new Error("Not authenticated");
     }
     try {
-      const result = (await callCreateJam()) as { data: { success: boolean, jamId: string }};
+      const result = (await callCreateJam()) as {
+        data: {
+          success: boolean,
+          jamId: string
+        }
+      };
       if (result.data.success) {
         console.log("Jam created with ID:", result.data.jamId);
         return result.data.jamId;
@@ -371,6 +396,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       console.error("Error creating jam:", error);
       return null;
     }
+  }
+
+  async function manageJamPermissions(jamId: string, targetUsername: string, role: 'editor' | 'viewer' | 'remove') {
+    if (!currentUser) throw new Error("Not authenticated");
+    return callManageJamPermissions({
+      jamId,
+      targetUsername,
+      role
+    });
   }
 
   const contextValue: AuthContextType = {
@@ -392,6 +426,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     removeFriend,
     cancelFriendRequest,
     createJam,
+    manageJamPermissions
   };
 
   return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>;
