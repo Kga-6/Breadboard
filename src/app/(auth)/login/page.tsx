@@ -14,18 +14,22 @@ export default function Login() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null);
 
   const handleLogin = async (e: React.FormEvent) => {
+    setLoading(true)
     e.preventDefault();
     try {
       await loginEmail(email, password);
     } catch (err: any) {
       setError(err.message);
     }
+    setLoading(false)
   };
 
   const handleloginGoogle = () => {
+    setLoading(true)
     loginGoogle()
       .then(() => {
           console.log("Logged in!");
@@ -33,33 +37,39 @@ export default function Login() {
       .catch(() => {
           console.error("Something went wrong");
       });
+    setLoading(false)
   };
 
   return (
-    <div>
-      <h1>Login</h1>
-      <form onSubmit={handleLogin}>
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="Email"
-          required
-        />
-        <input
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="Password"
-          required
-        />
-        <button type="submit">Login</button>
-        {error && <p>{error}</p>}
-      </form>
-      <Link href="/register">Don't have an account? Register</Link>
-      <br />
-      <Link href="/forgot-password">Forgot Password?</Link>
-      <button onClick={handleloginGoogle}>Use Google</button>
+    <div className="flex w-full h-full items-center justify-center">
+      <div className="bg-gray-200 p-4 rounded-md">
+        <h1 className="text-3xl mb-4">Holla, Welcome back!</h1>
+        <form onSubmit={handleLogin} className="flex flex-col">
+          <input
+            className="h-[44px] p-2 rounded-md text-black bg-white shadow-lg border border-gray-100 mb-2"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Email"
+            required
+          />
+          <input
+            className="h-[44px] p-2 rounded-md text-black bg-white shadow-lg border border-gray-100 mb-2"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Password"
+            required
+          />
+          <button className="p-2 bg-amber-500 rounded-md text-white" type="submit" disabled={loading}>Login</button>
+        </form>
+
+        <div className="flex flex-col mt-4">
+          <Link className="text-amber-800 text-sm text-center mb-4" href="/forgot-password">Forgot Password?</Link>
+          <button className="bg-white shadow-sm h-[44px] rounded-md mb-4" onClick={handleloginGoogle}>Login in with Google</button>
+          <Link className="text-center text-gray-500" href="/register">Don't have an account? <span className="text-amber-600 font-bold">register</span></Link>
+        </div>
+      </div>
     </div>
   );
 }

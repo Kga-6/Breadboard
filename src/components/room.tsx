@@ -26,26 +26,29 @@ export function Room({ children, roomId }: RoomProps ) {
 
         // Get the JWT from the authenticated user provided by your context
         const idToken = await currentUser?.getIdToken();
+        if (idToken){
+          console.log(idToken)
 
-        // Make the POST request to your Next.js API route for Liveblocks auth
-        const response = await fetch("/api/liveblocks-auth", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            // Send the token in the Authorization header
-            "Authorization": `Bearer ${idToken}`,
-          },
-          body: JSON.stringify({ room, userInfo: userData  }), 
-        });
+          // Make the POST request to your Next.js API route for Liveblocks auth
+          const response = await fetch("/api/liveblocks-auth", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              // Send the token in the Authorization header
+              "Authorization": `Bearer ${idToken}`,
+            },
+            body: JSON.stringify({ room, userInfo: userData  }), 
+          });
 
-        if (!response.ok) {
-            // Handle auth errors from your backend
-            const errorText = await response.text();
-            throw new Error(`Authentication failed: ${errorText}`);
+          if (!response.ok) {
+              // Handle auth errors from your backend
+              const errorText = await response.text();
+              throw new Error(`Authentication failed: ${errorText}`);
+          }
+
+          // Return the authorization token to Liveblocks
+          return await response.json();
         }
-
-        // Return the authorization token to Liveblocks
-        return await response.json();
       }}
       
     >

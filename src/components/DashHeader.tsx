@@ -9,17 +9,6 @@ export default function DashHeader(){
   const {currentUser, userData, logout, isPro, isAdmin} = useAuth();
   const router = useRouter();
 
-  const handleLogout = () => {
-    logout()
-      .then(()=>{
-          console.log("Logged out!")
-          router.replace("/");
-      })
-      .catch(()=>{
-          console.error("Something went wrong!")
-      })
-  }
-
   return(
     <div className="flex justify-between items-center p-4 h-14 border-b">
       <Link href="/" className="text-2xl font-bold">Breadboard</Link>
@@ -49,7 +38,7 @@ export default function DashHeader(){
             {userData?.username}
           </div>
 
-          <button className="ml-2 font-bold" onClick={handleLogout}>| Sign out</button>
+          <button className="ml-2 font-bold" onClick={logout}>| Sign out</button>
         </div>
       )}
     </div>

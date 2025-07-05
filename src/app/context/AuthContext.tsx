@@ -1,6 +1,6 @@
 "use client";
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
-import { GoogleAuthProvider, onAuthStateChanged, signInWithPopup, User, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
+import { GoogleAuthProvider, onAuthStateChanged, signInWithPopup, User, signInWithEmailAndPassword, createUserWithEmailAndPassword, onIdTokenChanged } from "firebase/auth";
 import { auth, firestore, functions } from "../../../firebase/client";
 import {
   collection,
@@ -288,70 +288,107 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     });
 
+    const unsubscribeToken = onIdTokenChanged(auth, async (user: User | null) => {
+      if (user) {
+        const token = await user.getIdToken();
+        setAuthToken(token);
+      } else {
+        removeAuthToken();
+      }
+    });
+
     return () => {
       unsubscribeAuth();
+      unsubscribeToken();
       unsubscribers.forEach((unsub) => unsub());
     };
   }, []);
 
-  function loginGoogle(): Promise<void> {
-    return new Promise((resolve,reject) => {
-      if(!auth){
-        reject()
-        return;
-      }
-      signInWithPopup(auth, new GoogleAuthProvider())
-        .then((user) => {
-          console.log("signed in!")
-          resolve()
-        })
-        .catch(()=>{
-          console.error("Something went wrong")
-          reject()
-        })
-    })
-  }
+  const loginGoogle = async (): Promise<void> => {
+    if (!auth) throw new Error("Firebase auth not initialized");
+
+    try {
+      await signInWithPopup(auth, new GoogleAuthProvider());
+      console.log("Google sign-in successful");
+    } catch (error) {
+      console.error("Google sign-in failed", error);
+      throw error;
+    }
+  };
 
   const loginEmail = async (email: string, password: string) => {
+    if (!auth) throw new Error("Firebase auth not initialized");
+
     try {
       await signInWithEmailAndPassword(auth, email, password);
       return { success: true };
     } catch (error: any) {
-      let msg = error.message;
-      if (msg.includes("auth/invalid-email")) msg = "Invalid email";
-      if (msg.includes("auth/user-not-found")) msg = "User not found";
+      let msg = "An error occurred. Please try again.";
+      switch (error.code) {
+        case "auth/invalid-email":
+          msg = "Invalid email address";
+          break;
+        case "auth/user-not-found":
+          msg = "No user found with this email";
+          break;
+        case "auth/wrong-password":
+          msg = "Incorrect password";
+          break;
+        default:
+          msg = error.message;
+      }
       return { success: false, msg };
     }
   };
 
   const registerEmail = async (email: string, password: string) => {
+    if (!auth) throw new Error("Firebase auth not initialized");
+    
     try {
       await createUserWithEmailAndPassword(auth, email, password);
       return { success: true };
     } catch (error: any) {
-      let msg = error.message;
-      if (msg.includes("auth/email-already-in-use")) msg = "Email already in use";
+      let msg = "An error occurred. Please try again.";
+      switch (error.code) {
+        case "auth/email-already-in-use":
+          msg = "Email is already in use";
+          break;
+        case "auth/invalid-email":
+          msg = "Invalid email address";
+          break;
+        case "auth/weak-password":
+          msg = "Password is too weak";
+          break;
+        default:
+          msg = error.message;
+      }
       return { success: false, msg };
     }
   };
 
-  function logout(): Promise<void> {
-    return new Promise((resolve,reject) => {
-      if(!auth){
-        reject()
-        return;
+  const logout = async (): Promise<void> => {
+    if (!auth) throw new Error("Firebase not initialized");
+
+    try {
+      const user = auth.currentUser;
+      if (user) {
+        const userRef = doc(firestore, "users", user.uid);
+        await updateDoc(userRef, {
+          online: false,
+          lastSeen: serverTimestamp(),
+        });
       }
-      auth.signOut()
-        .then(()=>{
-          console.log("Signed out");
-          resolve()
-        })
-        .catch(()=>{
-          console.error("Something went wrong");
-          reject()
-        })
-    })
-  }
+
+      await auth.signOut();
+      removeAuthToken();
+      router.replace("/");
+      console.log("User logged out");
+    } catch (error) {
+      console.error("Logout error:", error);
+      router.replace("/");
+      throw error;
+    }
+  };
 
   async function sendFriendRequest(recipientUsername: string) {
     return callSendFriendRequest({ recipientUsername });

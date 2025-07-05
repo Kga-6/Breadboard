@@ -8,39 +8,53 @@ initializeApp();
 const db = getFirestore();
 
 // Define admin/pro emails (consider moving to environment variables)
-const ADMIN_EMAILS = ["admin@example.com","Kguerrero0325@gmail.com"];
+const ADMIN_EMAILS = ["admin@example.com","kguerrero0325@gmail.com"];
 const PRO_EMAILS = ["pro2@example.com"];
 
-const generateUniqueUsername = async (displayName:string, database: Firestore) => {
-  // Use the display name or 'user' as a base, remove spaces, and convert to lowercase
-  const baseUsername = (displayName || "user").replace(/\s/g, "").toLowerCase();
-  let username = "";
-  let isUnique = false;
-  let attempts = 0;
+const generateUniqueUsername = async (displayName: string, database: Firestore) => {
+  // Sanitize: allow only letters, numbers, and underscores
+  const sanitizedBase = (displayName || "user")
+    .replace(/\s+/g, "")         // Remove spaces
+    .replace(/[^a-zA-Z0-9_]/g, "") // Remove invalid characters
+    .toLowerCase();
 
-  while (!isUnique && attempts < 10) { // Limit attempts to prevent infinite loops
-    // Append a random 6-digit number
-    const randomSuffix = Math.floor(10000000000000 + Math.random() * 90000000000000);
-    username = `${baseUsername}${randomSuffix}`;
+  const maxBaseLength = 8; // Leave room for suffix (e.g., "123123452")
+  const baseUsername = sanitizedBase.slice(0, maxBaseLength) || "user";
 
-    // Check if the username already exists in the 'users' collection
-    const userSnapshot = await database.collection("users").where("username", "==", username).get();
-    if (userSnapshot.empty) {
-      isUnique = true;
-    }
-    attempts++;
-  }
+  let username = "";
+  let isUnique = false;
+  let attempts = 0;
 
-  // Fallback in the rare case of 10 collisions
-  if (!isUnique) {
-    username = `${baseUsername}${Date.now()}`;
-  }
+  while (!isUnique && attempts < 10) {
+    const randomSuffix = Math.floor(100000000000000 + Math.random() * 900000000000000);
+    username = `${baseUsername}_${randomSuffix}`; // Use underscore as separator
 
-  return username;
+    // Enforce length < 15
+    if (username.length > 15) {
+      username = username.slice(0, 15);
+    }
+
+    const userSnapshot = await database
+      .collection("users")
+      .where("username", "==", username)
+      .get();
+
+    if (userSnapshot.empty) {
+      isUnique = true;
+    }
+    attempts++;
+  }
+
+  // Fallback if uniqueness failed
+  if (!isUnique) {
+    username = `${baseUsername}_${Date.now().toString().slice(-4)}`.slice(0, 15);
+  }
+
+  return username;
 };
 
+// When user signs up
 export const onUserCreate = functions.auth.user().onCreate(async (user) => {
-  // **FIXED**: displayName is no longer required here.
   if (!user?.email || !user?.uid) {
     console.error("Missing required user data:", {
       email: user?.email,

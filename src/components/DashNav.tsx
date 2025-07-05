@@ -9,6 +9,7 @@ export default function DashNav() {
 
   const links = [
     { href: "/app/home", label: "Home" },
+    { href: "/app/bible", label: "Bible" },
     { href: "/app/friends", label: "Friends" },
     { href: "/app/chat", label: "Chat" },
     { href: "/app/jam", label: "Jam" },

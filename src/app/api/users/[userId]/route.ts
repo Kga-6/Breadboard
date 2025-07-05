@@ -39,3 +39,22 @@ export async function GET(
       return new NextResponse("Internal Error", { status: 500 });
   }
 }
+
+
+    // "GET" USERDATA
+    // let userData = null;
+    // const userInfoResponse = await fetch(
+    //     `${process.env.API_URL}/api/users/${user.uid}`,
+    //     {
+    //         headers: {
+    //             Authorization: `Bearer ${authToken}`,
+    //         },
+    //     }
+    // );
+    // if (userInfoResponse.ok) {
+    //     userData = await userInfoResponse.json();
+    // }
+
+    // if (!userData) {
+    //   return new NextResponse("Unauthorized", { status: 401 });
+    // }
