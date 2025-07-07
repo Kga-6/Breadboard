@@ -1,18 +1,14 @@
 import Canvas from "./_components/canvas";
 import { Room } from "@/components/room";
 
-interface PageProps {
-  params: {
-    jamId: string;
-  };
-}
-
-export default function JamLink({ params }: PageProps) {
-  const jamId = params.jamId;
-
+export default function JamLink({
+  params,
+}: {
+  params: { jamId: string };
+}) {
   return (
-    <Room roomId={jamId}>
-      <Canvas jamId={jamId} />
+    <Room roomId={params.jamId}>
+      <Canvas jamId={params.jamId} />
     </Room>
   );
 }
