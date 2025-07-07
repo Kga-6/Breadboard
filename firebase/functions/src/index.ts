@@ -1,17 +1,46 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
-import * as functions from "firebase-functions/v1";
+//import * as functions from "firebase-functions/v1";
+
+import { onDocumentCreated } from 'firebase-functions/v2/firestore';
+import { beforeUserCreated, beforeUserSignedIn } from 'firebase-functions/v2/identity';
+
 import { initializeApp } from "firebase-admin/app";
 import { getFirestore, FieldValue, Firestore } from "firebase-admin/firestore";
 import { getStorage } from "firebase-admin/storage";
 import { getAuth } from "firebase-admin/auth";
 
+// Initialize Firebase Admin
 initializeApp();
-
 const db = getFirestore();
+const auth = getAuth();
+
+// Types for user data
+interface UserProfile {
+  uid: string;
+  email: string;
+  name: string;
+  username: string;
+  //displayName: string;
+  usernameLower: string;
+  profilePictureUrl: string | null;
+  isPro: boolean;
+  online: boolean;
+  completed_onboarding: boolean;
+  lastSeen: FirebaseFirestore.Timestamp;
+  bibleRoom: {
+    invited: string[];
+    sharing: boolean;
+  };
+  createdAt: FirebaseFirestore.Timestamp;
+  updatedAt: FirebaseFirestore.Timestamp;
+  isVerified: boolean;
+}
 
 // Define admin/pro emails (consider moving to environment variables)
 const ADMIN_EMAILS = ["admin@example.com", "kguerrero0325@gmail.com"];
 const PRO_EMAILS = ["pro2@example.com"];
+
+console.log(ADMIN_EMAILS, PRO_EMAILS)
 
 function extractFilePathFromUrl(url: string): string | null {
   try {
@@ -66,61 +95,196 @@ const generateUniqueUsername = async (displayName: string, database: Firestore) 
   return username;
 };
 
-// When user signs up
-export const onUserCreate = functions.auth.user().onCreate(async (user) => {
-  if (!user?.email || !user?.uid) {
-    console.error("Missing required user data:", {
-      email: user?.email,
-      uid: user?.uid,
-    });
-    return;
-  }
-
-  try {
-    const isAdmin = ADMIN_EMAILS.includes(user.email);
-    const isPro = isAdmin || PRO_EMAILS.includes(user.email);
-
-    // Generate the unique username
-    // This will now use the displayName if it's available, or "user" as a fallback.
-    const username = await generateUniqueUsername(user.displayName || user?.email.split("@")[0], db);
-
-    // Create user document with the new username and isPro flag
-    await db.doc(`users/${user.uid}`).set({
-      uid: user.uid,
-      email: user.email,
-      name: user.displayName || "Unknown", // Your existing fallback works perfectly
-      username: username,
-      usernameLower: username.toLowerCase(),
-      profilePictureUrl: user.photoURL || null,
-      isPro: isPro,
-      online: false,
-      completed_onboarding: false,
-      lastSeen: FieldValue.serverTimestamp(),
-      bibleRoom: {
-        invited: [], // users uid
-        sharing: false // does the user currently want anyone from invited to join in
-      }
-    });
-
-    console.log(`User document created for ${user.email} with username: ${username} and isPro: ${isPro}`);
-
-    // Set custom claims for admin and pro users
-    if (isAdmin) {
-      await getAuth().setCustomUserClaims(user.uid, {
-        role: "admin",
-        isPro: true,
-      });
-      console.log(`Admin custom claims set for ${user.email}`);
-    } else if (isPro) {
-      await getAuth().setCustomUserClaims(user.uid, {
-        isPro: true,
-      });
-      console.log(`Pro custom claims set for ${user.email}`);
-    }
-  } catch (error) {
-    console.error("Error in onUserCreate function:", error);
-  }
+// Trigger when user is created (before they're saved to Firebase Auth)
+export const beforeUserCreatedTrigger = beforeUserCreated(async (event) => {
+  const user = event.data;
+  
+  if (!user) {
+    throw new HttpsError('invalid-argument', 'User data is required');
+  }
+  
+  // You can add validation here
+  if (!user.email) {
+    throw new HttpsError('invalid-argument', 'Email is required');
+  }
+  
+  return {
+    // You can set custom claims here if needed
+    customClaims: {
+      role: 'user',
+      createdAt: new Date().toISOString(),
+    }
+  };
 });
+
+// Trigger when user signs in (you can add additional checks here)
+export const beforeUserSignedInTrigger = beforeUserSignedIn(async (event) => {
+  const user = event.data;
+  
+  if (!user) {
+    return;
+  }
+  
+  // Add any sign-in validation logic here
+  console.log(`User ${user.uid} is signing in`);
+  
+  return;
+});
+
+// Trigger when a new user document is created in Firestore
+export const onUserCreated = onDocumentCreated('/users/{uid}', async (event) => {
+  const userData = event.data?.data();
+  const uid = event.params?.uid;
+  
+  if (!userData || !uid) return;
+  
+  try {
+    // Create username reservation
+    await db.collection('usernames').doc(userData.username).set({
+      uid: uid,
+      createdAt: FirebaseFirestore.Timestamp.now(),
+    });
+    
+    // Create user stats document
+    await db.collection('userStats').doc(uid).set({
+      postsCount: 0,
+      followersCount: 0,
+      followingCount: 0,
+      likesReceived: 0,
+      commentsReceived: 0,
+      updatedAt: FirebaseFirestore.Timestamp.now(),
+    });
+    
+    console.log(`User profile created successfully for ${uid}`);
+  } catch (error) {
+    console.error('Error creating user profile:', error);
+  }
+});
+
+// Callable function to create user profile (called from client)
+export const createUserProfile = onCall(async (request) => {
+  const { auth, data } = request;
+
+  if (!auth) {
+    throw new HttpsError('unauthenticated', 'User must be authenticated');
+  }
+
+  const { name } = data;
+
+  try {
+    const userDocRef = db.collection('users').doc(auth.uid);
+    const existingUser = await userDocRef.get();
+
+    // The Fix: If the user already exists, just return successfully.
+    if (existingUser.exists) {
+      console.log(`User profile for ${auth.uid} already exists. Skipping creation.`);
+      return {
+        success: true,
+        message: 'Profile already exists.',
+        user: existingUser.data(),
+      };
+    }
+
+    const userRecord = await getAuth().getUser(auth.uid);
+    if (!userRecord || !userRecord.email) {
+      throw new HttpsError('not-found', 'User auth record not found');
+    }
+
+    const username = await generateUniqueUsername(userRecord.displayName || name || userRecord.email.split("@")[0], db);
+
+    const userProfile: UserProfile = {
+      uid: auth.uid,
+      email: userRecord.email || '',
+      name: name || userRecord.displayName || "",
+      username: username,
+      usernameLower: username.toLowerCase(),
+      profilePictureUrl: null,
+      isPro: false,
+      online: true, // Set to true on creation
+      completed_onboarding: false,
+      lastSeen: FieldValue.serverTimestamp() as FirebaseFirestore.Timestamp,
+      bibleRoom: {
+        invited: [],
+        sharing: false
+      },
+      createdAt: FieldValue.serverTimestamp() as FirebaseFirestore.Timestamp,
+      updatedAt: FieldValue.serverTimestamp() as FirebaseFirestore.Timestamp,
+      isVerified: false,
+    };
+
+    // This will now only run once
+    await userDocRef.set(userProfile);
+
+    return {
+      success: true,
+      message: 'Profile created successfully.',
+      user: userProfile,
+    };
+
+  } catch (error) {
+    console.error('Error in createUserProfile:', error);
+    if (error instanceof HttpsError) {
+        throw error;
+    }
+    throw new HttpsError('internal', 'Failed to create user profile');
+  }
+});
+
+// When user signs up OLDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD BYEEEEEEEEEEEEEEE
+// export const onUserCreate = functions.auth.user().onCreate(async (user) => {
+//   if (!user?.email || !user?.uid) {
+//     console.error("Missing required user data:", {
+//       email: user?.email,
+//       uid: user?.uid,
+//     });
+//     return;
+//   }
+
+//   try {
+//     const isAdmin = ADMIN_EMAILS.includes(user.email);
+//     const isPro = isAdmin || PRO_EMAILS.includes(user.email);
+
+//     // Generate the unique username
+//     // This will now use the displayName if it's available, or "user" as a fallback.
+//     const username = await generateUniqueUsername(user.displayName || user?.email.split("@")[0], db);
+
+//     // Create user document with the new username and isPro flag
+//     await db.doc(`users/${user.uid}`).set({
+//       uid: user.uid,
+//       email: user.email,
+//       name: user.displayName || "Unknown", // Your existing fallback works perfectly
+//       username: username,
+//       usernameLower: username.toLowerCase(),
+//       profilePictureUrl: user.photoURL || null,
+//       isPro: isPro,
+//       online: false,
+//       completed_onboarding: false,
+//       lastSeen: FieldValue.serverTimestamp(),
+//       bibleRoom: {
+//         invited: [], // users uid
+//         sharing: false // does the user currently want anyone from invited to join in
+//       }
+//     });
+
+//     console.log(`User document created for ${user.email} with username: ${username} and isPro: ${isPro}`);
+
+//     // Set custom claims for admin and pro users
+//     if (isAdmin) {
+//       await auth.setCustomUserClaims(user.uid, {
+//         role: "admin",
+//         isPro: true,
+//       });
+//       console.log(`Admin custom claims set for ${user.email}`);
+//     } else if (isPro) {
+//       await auth.setCustomUserClaims(user.uid, {
+//         isPro: true,
+//       });
+//       console.log(`Pro custom claims set for ${user.email}`);
+//     }
+//   } catch (error) {
+//     console.error("Error in onUserCreate function:", error);
+//   }
+// });
 
 // for my users
 export const updateUserProfile = onCall(async (request) => {
@@ -215,7 +379,7 @@ export const updateUserProfile = onCall(async (request) => {
   await userRef.update(updateData);
 
   if (Object.keys(authUpdateData).length > 0) {
-    await getAuth().updateUser(userId, authUpdateData);
+    await auth.updateUser(userId, authUpdateData);
   }
 
   return { success: true, message: "Profile updated successfully." };

@@ -1,7 +1,7 @@
 "use client";
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { GoogleAuthProvider, onAuthStateChanged, signInWithPopup, User, signInWithEmailAndPassword, createUserWithEmailAndPassword, onIdTokenChanged } from "firebase/auth";
+import { ref, uploadBytes, getDownloadURL, } from "firebase/storage";
+import { updateProfile , GoogleAuthProvider, onAuthStateChanged, signInWithPopup, User, signInWithEmailAndPassword, createUserWithEmailAndPassword, onIdTokenChanged } from "firebase/auth";
 import { auth, firestore, functions, storage  } from "../../../firebase/client";
 import {
   collection,
@@ -88,7 +88,8 @@ interface AuthContextType {
   loginGoogle: () => Promise<void>;
   logout: () => Promise<void>;
   loginEmail: (email: string, password: string) => Promise<{ success: boolean; msg?: string }>;
-  registerEmail: (email: string, password: string) => Promise<{ success: boolean; msg?: string }>;
+  registerEmail: (email: string, password: string, displayName: string) => Promise<{ success: boolean; msg?: string }>;
+  createUserProfile: (displayName: string | null) => Promise<void>;
   sendFriendRequest: (recipientEmail: string) => Promise<void>;
   respondToFriendRequest: (
     requestId: string,
@@ -128,6 +129,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const callManageBibleRoomInvite = httpsCallable(functions, "manageBibleRoomInvite");
   const callSetBibleRoomSharing = httpsCallable(functions, "setBibleRoomSharing");
   const callUpdateUserProfile = httpsCallable(functions, "updateUserProfile");
+  const callCreateUserProfile = httpsCallable(functions, "createUserProfile");
 
   const router = useRouter();
   const pathname = usePathname();
@@ -329,6 +331,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       await signInWithPopup(auth, new GoogleAuthProvider());
       console.log("Google sign-in successful");
+      await createUserProfile(null);
     } catch (error) {
       console.error("Google sign-in failed", error);
       throw error;
@@ -368,11 +371,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const registerEmail = async (email: string, password: string) => {
+  const registerEmail = async (email: string, password: string, name: string) => {
     if (!auth) throw new Error("Firebase auth not initialized");
     
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      
+      // Update Firebase Auth profile
+      await updateProfile(userCredential.user, {
+        displayName: name,
+      });
+
+      await createUserProfile(name);
       return { success: true };
     } catch (error: unknown) {
       let msg = "An error occurred. Please try again.";
@@ -398,6 +408,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return { success: false, msg };
     }
   };
+
+  const createUserProfile = async (name: string | null) => {
+    if (!auth) throw new Error("Firebase auth not initialized");
+    await callCreateUserProfile({ name });
+  }
 
   const logout = async (): Promise<void> => {
     if (!auth) throw new Error("Firebase not initialized");
@@ -542,7 +557,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     manageJamPermissions,
     manageBibleRoomInvite,
     setBibleRoomSharing,
-    updateUserProfile
+    updateUserProfile,
+    createUserProfile
   };
 
   return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>;
