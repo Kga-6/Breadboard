@@ -1,5 +1,5 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
-import { beforeUserCreated } from "firebase-functions/v2/identity";
+import * as functions from "firebase-functions/v1";
 import { initializeApp } from "firebase-admin/app";
 import { getFirestore, FieldValue, Firestore } from "firebase-admin/firestore";
 import { getStorage } from "firebase-admin/storage";
@@ -67,59 +67,59 @@ const generateUniqueUsername = async (displayName: string, database: Firestore) 
 };
 
 // When user signs up
-export const onUserCreate = beforeUserCreated(async (event) => {
-  const user = event.data; // The user data is in event.data
-  if (!user?.email || !user?.uid) {
-    console.error("Missing required user data:", {
-      email: user?.email,
-      uid: user?.uid,
-    });
-    return;
-  }
+export const onUserCreate = functions.auth.user().onCreate(async (user) => {
+  if (!user?.email || !user?.uid) {
+    console.error("Missing required user data:", {
+      email: user?.email,
+      uid: user?.uid,
+    });
+    return;
+  }
 
-  try {
-    const isAdmin = ADMIN_EMAILS.includes(user.email);
-    const isPro = isAdmin || PRO_EMAILS.includes(user.email);
+  try {
+    const isAdmin = ADMIN_EMAILS.includes(user.email);
+    const isPro = isAdmin || PRO_EMAILS.includes(user.email);
 
-    // Generate the unique username
-    const username = await generateUniqueUsername(user.displayName || user?.email.split("@")[0], db);
+    // Generate the unique username
+    // This will now use the displayName if it's available, or "user" as a fallback.
+    const username = await generateUniqueUsername(user.displayName || user?.email.split("@")[0], db);
 
-    // Create user document
-    await db.doc(`users/${user.uid}`).set({
-      uid: user.uid,
-      email: user.email,
-      name: user.displayName || "Unknown",
-      username: username,
+    // Create user document with the new username and isPro flag
+    await db.doc(`users/${user.uid}`).set({
+      uid: user.uid,
+      email: user.email,
+      name: user.displayName || "Unknown", // Your existing fallback works perfectly
+      username: username,
       usernameLower: username.toLowerCase(),
-      profilePictureUrl: user.photoURL || null,
-      isPro: isPro,
-      online: false,
+      profilePictureUrl: user.photoURL || null,
+      isPro: isPro,
+      online: false,
       completed_onboarding: false,
-      lastSeen: FieldValue.serverTimestamp(),
+      lastSeen: FieldValue.serverTimestamp(),
       bibleRoom: {
-        invited: [],
-        sharing: false
+        invited: [], // users uid
+        sharing: false // does the user currently want anyone from invited to join in
       }
-    });
+    });
 
-    console.log(`User document created for ${user.email} with username: ${username} and isPro: ${isPro}`);
+    console.log(`User document created for ${user.email} with username: ${username} and isPro: ${isPro}`);
 
-    // Set custom claims
-    if (isAdmin) {
-      await getAuth().setCustomUserClaims(user.uid, {
-        role: "admin",
-        isPro: true,
-      });
-      console.log(`Admin custom claims set for ${user.email}`);
-    } else if (isPro) {
-      await getAuth().setCustomUserClaims(user.uid, {
-        isPro: true,
-      });
-      console.log(`Pro custom claims set for ${user.email}`);
-    }
-  } catch (error) {
-    console.error("Error in onUserCreate function:", error);
-  }
+    // Set custom claims for admin and pro users
+    if (isAdmin) {
+      await getAuth().setCustomUserClaims(user.uid, {
+        role: "admin",
+        isPro: true,
+      });
+      console.log(`Admin custom claims set for ${user.email}`);
+    } else if (isPro) {
+      await getAuth().setCustomUserClaims(user.uid, {
+        isPro: true,
+      });
+      console.log(`Pro custom claims set for ${user.email}`);
+    }
+  } catch (error) {
+    console.error("Error in onUserCreate function:", error);
+  }
 });
 
 // for my users
