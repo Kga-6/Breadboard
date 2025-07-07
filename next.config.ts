@@ -3,17 +3,26 @@ import { NextConfig } from 'next';
 const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
+      // Your existing patterns
       {
         protocol: 'https',
         hostname: 'i.pravatar.cc',
-        port: '',
-        pathname: '/**',
       },
       {
         protocol: 'https',
         hostname: 'lh3.googleusercontent.com',
-        port: '',
-        pathname: '/**',
+      },
+      // --- Add these new patterns ---
+      // For live Firebase Storage
+      {
+        protocol: 'https',
+        hostname: 'firebasestorage.googleapis.com',
+      },
+      // For the Firebase Local Emulator
+      {
+        protocol: 'http',
+        hostname: '127.0.0.1',
+        port: '9199',
       },
     ],
   },

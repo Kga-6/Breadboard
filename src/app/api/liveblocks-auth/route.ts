@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { Liveblocks, RoomAccesses } from "@liveblocks/node";
 const liveblocks = new Liveblocks({
-  secret: "sk_dev_nJvd18ul5Mlwc9kWZeYeB-5n5RjLAp0jD7FzQc2rOFpUjA1LdNjcEn0lBEN7BCBx",
+  secret: `${process.env.LIVEBLOCKS_SECRET_KEY}`,
 });
 
 export async function POST(request: NextRequest) {
@@ -33,20 +33,24 @@ export async function POST(request: NextRequest) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const { room, userInfo } = await request.json();
+    const { room, userInfo, jamId } = await request.json();
 
     if (!room) {
-        return new NextResponse("Bad Request: 'room' not found in body", { status: 400 });
+      return new NextResponse("Bad Request: 'room' not found in body", { status: 400 });
     }
 
     if (!userInfo) {
-        return new NextResponse("Bad Request: 'userData' not found in body", { status: 400 });
+      return new NextResponse("Bad Request: 'userData' not found in body", { status: 400 });
+    }
+
+    if (!jamId) {
+      return new NextResponse("Bad Request: 'jamId' not found in body", { status: 400 });
     }
 
     console.log(`User '${user.uid}' attempting to access room '${room}'`);
 
     /// Fetch the Jam document from Firestore
-    const jamRef = firestore.collection("jams").doc(room);
+    const jamRef = firestore.collection("jams").doc(jamId);
     const jamDoc = await jamRef.get();
 
     if (!jamDoc.exists) {
@@ -98,6 +102,7 @@ export async function POST(request: NextRequest) {
     // Use a naming pattern to allow access to rooms with wildcards
     // Giving the user read access on their org, and write access on their group
     //session.allow(`${user}:*`, session.READ_ACCESS);
+    //session.allow(room, accessLevel);
     session.allow(room, accessLevel);
     //session.allow(`${user.organization}:${user.group}:*`, session.FULL_ACCESS);
 

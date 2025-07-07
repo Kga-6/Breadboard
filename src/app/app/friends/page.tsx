@@ -25,7 +25,7 @@ export default function Friends() {
     loading,
   } = useAuth();
 
-  const [tab, setTab] = useState<"all" | "pending" | "online" | "add">("all");
+  const [tab, setTab] = useState<"all" | "pending" | "online" | "add">("add");
   const [search, setSearch] = useState("");
   const [addFriendUsername, setAddFriendUsername] = useState("");
   const [error, setError] = useState("");
@@ -76,7 +76,7 @@ export default function Friends() {
               <Image
                 src={
                   friend.photoURL ||
-                  `https://i.pravatar.cc/150?u=${friend.id}`
+                  `/default-avatar.jpg`
                 }
                 alt={friend.username}
                 width={40}
@@ -113,47 +113,60 @@ export default function Friends() {
     </ul>
   );
 
+  console.log(sentRequests)
+
   return (
-    <div>
+    <div className="p-4 max-w-2xl mx-auto">
       <h1 className="text-3xl font-bold mb-6 text-gray-800">Friends</h1>
 
       {/* Tabs */}
-      <div className="flex border-b mb-6">
-        <button
-          onClick={() => setTab("online")}
-          className={`flex items-center gap-2 px-4 py-2 font-medium transition-colors ${
-            tab === "online"
-              ? "border-b-2 border-blue-500 text-blue-500"
-              : "text-gray-500 hover:text-blue-500"
-          }`}
-        >
-          <CircleDot size={16} /> Online
-        </button>
-        <button
-          onClick={() => setTab("all")}
-          className={`flex items-center gap-2 px-4 py-2 font-medium transition-colors ${
-            tab === "all"
-              ? "border-b-2 border-blue-500 text-blue-500"
-              : "text-gray-500 hover:text-blue-500"
-          }`}
-        >
-          <Users size={16} /> All Friends
-        </button>
-        <button
-          onClick={() => setTab("pending")}
-          className={`flex items-center gap-2 px-4 py-2 font-medium transition-colors ${
-            tab === "pending"
-              ? "border-b-2 border-blue-500 text-blue-500"
-              : "text-gray-500 hover:text-blue-500"
-          }`}
-        >
-          <Clock size={16} /> Pending
-          {receivedRequests.length > 0 && (
-            <span className="bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-              {receivedRequests.length}
-            </span>
-          )}
-        </button>
+      <div className="flex mb-6">
+
+        {onlineFriends.length > 0 &&
+          <button
+            onClick={() => setTab("online")}
+            className={`flex items-center gap-2 px-4 py-2 font-medium transition-colors ${
+              tab === "online"
+                ? "border-b-2 border-blue-500 text-blue-500"
+                : "text-gray-500 hover:text-blue-500"
+            }`}
+          >
+            Online
+          </button>
+        }
+
+        {friends.length > 0 &&
+          <button
+            onClick={() => setTab("all")}
+            className={`flex items-center gap-2 px-4 py-2 font-medium transition-colors ${
+              tab === "all"
+                ? "border-b-2 border-blue-500 text-blue-500"
+                : "text-gray-500 hover:text-blue-500"
+            }`}
+          >
+            All Friends
+          </button> 
+        }
+
+        {(receivedRequests.length > 0 || sentRequests.length > 0) &&
+          <button
+            onClick={() => setTab("pending")}
+            className={`flex items-center gap-2 px-4 py-2 font-medium transition-colors ${
+              tab === "pending"
+                ? "border-b-2 border-blue-500 text-blue-500"
+                : "text-gray-500 hover:text-blue-500"
+            }`}
+          >
+            Pending
+            {receivedRequests.length > 0 && (
+              <span className="bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                {receivedRequests.length}
+              </span>
+            )}
+          </button>
+        }
+        
+
         <button
           onClick={() => setTab("add")}
           className={`flex items-center gap-2 px-4 py-2 font-medium transition-colors ${
@@ -162,8 +175,9 @@ export default function Friends() {
               : "text-gray-500 hover:text-blue-500"
           }`}
         >
-          <UserPlus size={16} /> Add Friend
+          Add Friend
         </button>
+
       </div>
 
       {/* Message/Error Display */}
@@ -207,7 +221,7 @@ export default function Friends() {
                       <Image
                         src={
                           req.photoURL ||
-                          `https://i.pravatar.cc/150?u=${req.from}`
+                          `/default-avatar.jpg`
                         }
                         alt={req.username}
                         width={40}
@@ -259,7 +273,7 @@ export default function Friends() {
                     <Image
                       src={
                         req.photoURL ||
-                        `https://i.pravatar.cc/150?u=${req.from}`
+                        `/default-avatar.jpg`
                       }
                       alt={req.username}
                       width={40}

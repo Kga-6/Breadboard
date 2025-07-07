@@ -9,14 +9,14 @@ export default function DashboardLayout({
   return (
     <div className="h-screen w-screen overflow-hidden flex flex-col">
       {/* Fixed Header */}
-      <div className="h-14 shrink-0">
+      {/* <div className="h-14 shrink-0">
         <DashHeader />
-      </div>
+      </div> */}
 
       {/* Main layout area below header */}
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
-        <div className="w-64 bg-white shadow-md shrink-0">
+        <div className="w-64 bg-white shrink-0">
           <DashNav />
         </div>
 

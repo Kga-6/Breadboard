@@ -10,7 +10,6 @@ interface JamPageProps {
 export default function Jam({params}: JamPageProps){
   const jamId = params.jamId;
 
-  console.log(jamId)
   return (
     <Room roomId={jamId}>
       <Canvas jamId={jamId}/>

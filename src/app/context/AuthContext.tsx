@@ -1,7 +1,8 @@
 "use client";
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { GoogleAuthProvider, onAuthStateChanged, signInWithPopup, User, signInWithEmailAndPassword, createUserWithEmailAndPassword, onIdTokenChanged } from "firebase/auth";
-import { auth, firestore, functions } from "../../../firebase/client";
+import { auth, firestore, functions, storage  } from "../../../firebase/client";
 import {
   collection,
   doc,
@@ -36,10 +37,18 @@ type UserType = {
   name: string | null;
   email: string | null;
   username: string | null;
+  usernameLower: string | null;
+  completed_onboarding: boolean;
   isPro?: boolean;
-  photoURL: string | null;
+  profilePictureUrl: string | null;
   lastSeen?: any;
   online?: boolean;
+  dob: string;
+  dobChangeCount: number | null | undefined;
+  bibleRoom: {
+    invited: string [],
+    sharing: boolean,
+  },
 };
 
 type Friend = {
@@ -89,6 +98,14 @@ interface AuthContextType {
   ) => Promise<void>;
   removeFriend: (friendId: string) => Promise<void>;
   cancelFriendRequest: (requestId: string) => Promise<void>;
+  manageBibleRoomInvite: (friendId: string, action: 'invite' | 'uninvite') => Promise<any>;
+  setBibleRoomSharing: (sharing: boolean) => Promise<any>;
+  updateUserProfile: (data: {
+    name?: string;
+    dob?: string;
+    newUsername?: string;
+    photoFile?: File;
+  }) => Promise<any>;
 }
 
 const AuthContext = createContext<AuthContextType | null >(null);
@@ -110,22 +127,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const callCancelFriendRequest = httpsCallable(functions, "cancelFriendRequest");
   const callCreateJam = httpsCallable(functions, "createJam");
   const callManageJamPermissions = httpsCallable(functions, "manageJamPermissions");
-
+  const callManageBibleRoomInvite = httpsCallable(functions, "manageBibleRoomInvite");
+  const callSetBibleRoomSharing = httpsCallable(functions, "setBibleRoomSharing");
+  const callUpdateUserProfile = httpsCallable(functions, "updateUserProfile");
 
   const router = useRouter();
   const pathname = usePathname();
 
   useEffect(() => {
-    if (!loading && userData) {
-      if (pathname === '/login' || pathname === '/register') {
-        router.replace('/app/home');
-      }
-    }
-  }, [currentUser, userData, loading, pathname, router]);
-
-  useEffect(() => {
-    setLoading(true);
-
     if (!auth) {
       setLoading(false);
       return;
@@ -149,7 +158,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setJams([]);
         removeAuthToken();
         setLoading(false);
+        router.replace('/');
       } else {
+        setLoading(true);
         const token = await firebaseUser.getIdToken();
         setAuthToken(token);
         setCurrentUser(firebaseUser);
@@ -212,22 +223,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         // Friends List Listener
         const friendsRef = collection(userRef, "friends");
         const unsubFriends = onSnapshot(friendsRef, async (snapshot) => {
-          const friendsList: Friend[] = [];
-          for (const friendDoc of snapshot.docs) {
-            const friendUserSnap = await getDoc(
-              doc(firestore, "users", friendDoc.id)
-            );
+          const friendsListPromises = snapshot.docs.map(async (friendDoc) => {
+            const friendUserSnap = await getDoc(doc(firestore, "users", friendDoc.id));
             if (friendUserSnap.exists()) {
-              const friendUserData = friendUserSnap.data();
-              friendsList.push({
+              const friendUserData = friendUserSnap.data(); // -> Get data from the user snapshot
+              return {
                 id: friendDoc.id,
                 name: friendUserData.name || "Unknown",
                 username: friendUserData.username || "Unknown",
                 online: friendUserData.online || false,
-                photoURL: friendUserData.photoURL || null,
-              });
+                photoURL: friendUserData.profilePictureUrl || null,
+              };
             }
-          }
+            return null;
+          });
+          const friendsList = (await Promise.all(friendsListPromises)).filter(f => f !== null) as Friend[];
           setFriends(friendsList);
         });
         unsubscribers.push(unsubFriends);
@@ -239,22 +249,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           where("status", "==", "pending")
         );
         const unsubSent = onSnapshot(sentReqRef, async (snapshot) => {
-          const requests: FriendRequest[] = [];
-          for (const reqDoc of snapshot.docs) {
-            const recipientSnap = await getDoc(
-              doc(firestore, "users", reqDoc.data().to)
-            );
+          const requestsPromises = snapshot.docs.map(async (reqDoc) => {
+            // -> Get data from the friend request snapshot to find the recipient's ID
+            const recipientId = reqDoc.data().to; 
+            const recipientSnap = await getDoc(doc(firestore, "users", recipientId));
             if (recipientSnap.exists()) {
-              const recipientData = recipientSnap.data();
-              requests.push({
+              const recipientData = recipientSnap.data(); // -> Get data from the recipient's user snapshot
+              return {
                 id: reqDoc.id,
                 name: recipientData.name || "Unknown",
                 username: recipientData.username || "Unknown",
                 from: reqDoc.data().from,
-                photoURL: recipientData.photoURL || null,
-              });
+                photoURL: recipientData.profilePictureUrl || null,
+              };
             }
-          }
+            return null;
+          });
+          const requests = (await Promise.all(requestsPromises)).filter(r => r !== null) as FriendRequest[];
           setSentRequests(requests);
         });
         unsubscribers.push(unsubSent);
@@ -266,22 +277,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           where("status", "==", "pending")
         );
         const unsubReceived = onSnapshot(receivedReqRef, async (snapshot) => {
-          const requests: FriendRequest[] = [];
-          for (const reqDoc of snapshot.docs) {
-            const senderSnap = await getDoc(
-              doc(firestore, "users", reqDoc.data().from)
-            );
+          const requestsPromises = snapshot.docs.map(async (reqDoc) => {
+            // -> Get data from the friend request snapshot to find the sender's ID
+            const senderId = reqDoc.data().from;
+            const senderSnap = await getDoc(doc(firestore, "users", senderId));
             if (senderSnap.exists()) {
-              const senderData = senderSnap.data();
-              requests.push({
+              const senderData = senderSnap.data(); // -> Get data from the sender's user snapshot
+              return {
                 id: reqDoc.id,
                 name: senderData.name || "Unknown",
                 username: senderData.username || "Unknown",
                 from: reqDoc.data().from,
-                photoURL: senderData.photoURL || null,
-              });
+                photoURL: senderData.profilePictureUrl || null,
+              };
             }
-          }
+            return null;
+          });
+          const requests = (await Promise.all(requestsPromises)).filter(r => r !== null) as FriendRequest[];
           setReceivedRequests(requests);
         });
         unsubscribers.push(unsubReceived);
@@ -303,6 +315,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       unsubscribers.forEach((unsub) => unsub());
     };
   }, []);
+
+  useEffect(() => {
+    if (loading) {
+      if (pathname === '/login' || pathname === '/register') {
+        router.replace('/app/home');
+      }
+    }
+    console.log(loading)
+  }, [loading]);
 
   const loginGoogle = async (): Promise<void> => {
     if (!auth) throw new Error("Firebase auth not initialized");
@@ -444,6 +465,50 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
   }
 
+  async function manageBibleRoomInvite(friendId: string, action: 'invite' | 'uninvite') {
+    if (!currentUser) throw new Error("Not authenticated");
+    return callManageBibleRoomInvite({ friendId, action });
+  }
+
+  async function setBibleRoomSharing(sharing: boolean) {
+    if (!currentUser) throw new Error("Not authenticated");
+    return callSetBibleRoomSharing({ sharing });
+  }
+
+  async function updateUserProfile(data: {
+      name?: string;
+      dob?: string;
+      newUsername?: string;
+      photoFile?: File;
+    }) {
+      if (!currentUser) throw new Error("Not authenticated");
+
+      // Construct the payload, ensuring we don't send "undefined" fields
+      const payload: { [key: string]: any } = {};
+      if (data.name !== undefined) payload.name = data.name;
+      if (data.dob !== undefined) payload.dob = data.dob;
+      if (data.newUsername !== undefined) payload.newUsername = data.newUsername;
+      
+      try {
+          if (data.photoFile) {
+              const filePath = `profile-pictures/${currentUser.uid}/${Date.now()}_${data.photoFile.name}`;
+              const storageRef = ref(storage, filePath);
+              const uploadTask = await uploadBytes(storageRef, data.photoFile);
+              payload.photoURL = await getDownloadURL(uploadTask.ref);
+          }
+          
+          // If the payload is empty (e.g., only a photo was updated), don't send an empty object
+          if (Object.keys(payload).length === 0 && !data.photoFile) {
+              return; 
+          }
+
+          return callUpdateUserProfile(payload);
+      } catch (error) {
+          console.error("Error updating profile:", error);
+          throw error;
+      }
+    }
+
   const contextValue: AuthContextType = {
     currentUser,
     userData,
@@ -463,7 +528,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     removeFriend,
     cancelFriendRequest,
     createJam,
-    manageJamPermissions
+    manageJamPermissions,
+    manageBibleRoomInvite,
+    setBibleRoomSharing,
+    updateUserProfile
   };
 
   return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>;

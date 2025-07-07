@@ -13,7 +13,7 @@ interface RoomProps {
   roomId: string,
 }
 
-export function Room({ children, roomId }: RoomProps ) {
+export function BibleRoom({ children, roomId }: RoomProps ) {
   const {currentUser, userData} = useAuth();
 
   return (
@@ -27,17 +27,16 @@ export function Room({ children, roomId }: RoomProps ) {
         // Get the JWT from the authenticated user provided by your context
         const idToken = await currentUser?.getIdToken();
         if (idToken){
-          console.log(idToken)
 
           // Make the POST request to your Next.js API route for Liveblocks auth
-          const response = await fetch("/api/liveblocks-auth", {
+          const response = await fetch(`/api/liveblocks-auth/bibleroom/${roomId}`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
               // Send the token in the Authorization header
               "Authorization": `Bearer ${idToken}`,
             },
-            body: JSON.stringify({ room, userInfo: userData, jamId: roomId  }), 
+            body: JSON.stringify({ room, userInfo: userData , ownersUid: roomId }), 
           });
 
           if (!response.ok) {
@@ -52,7 +51,7 @@ export function Room({ children, roomId }: RoomProps ) {
       }}
       
     >
-      <RoomProvider id={`jam:${roomId}`}>
+      <RoomProvider id={`bible:${roomId}`}>
         <ClientSideSuspense fallback={<div>Loading…</div>}>
           {children}
         </ClientSideSuspense>
