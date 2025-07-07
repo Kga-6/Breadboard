@@ -7,6 +7,14 @@ export default async function Admin(){
   const cookieStore = cookies();
   const authToken = (await cookieStore).get("firebaseIdToken")?.value;
 
+  if(!auth){
+    return <h1 className=" text-xl mb-10">Restricted</h1>;
+  }
+
+  if(!authToken){
+    return <h1 className=" text-xl mb-10">Restricted</h1>;
+  }
+
   let user: DecodedIdToken | null = null;
   try {
       user = await auth.verifyIdToken(authToken);

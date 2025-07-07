@@ -17,7 +17,7 @@ export async function getUserData(userId: string) {
   const friends = friendsCollection.docs.map(doc => doc.id);
 
   return {
-    ...userDocument.data(),
+    data: userDocument.data(),
     friends
   };
 }

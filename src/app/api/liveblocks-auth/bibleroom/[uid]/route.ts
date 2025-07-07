@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
       return new NextResponse("Not Found: ownersFriends list not found | BibleRoom", { status: 404 });
     }
 
-    const ownersBibleRoom = ownersData?.bibleRoom
+    const ownersBibleRoom = ownersData.data?.bibleRoom
     const invited = ownersBibleRoom.invited
     const sharing = ownersBibleRoom.sharing
 

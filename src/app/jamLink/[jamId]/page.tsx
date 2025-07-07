@@ -1,14 +1,16 @@
 import Canvas from "./_components/canvas";
 import { Room } from "@/components/room";
 
-export default function JamLink({
+export default async function JamLink({
   params,
 }: {
-  params: { jamId: string };
+  params: Promise<{ jamId: string }>;
 }) {
+  const { jamId } = await params;
+  
   return (
-    <Room roomId={params.jamId}>
-      <Canvas jamId={params.jamId} />
+    <Room roomId={jamId}>
+      <Canvas jamId={jamId} />
     </Room>
   );
 }

@@ -87,8 +87,8 @@ interface AuthContextType {
   createJam: () => Promise<string | null>;
   loginGoogle: () => Promise<void>;
   logout: () => Promise<void>;
-  loginEmail: (email: string, password: string) => Promise<{ success: boolean; msg?: void }>;
-  registerEmail: (email: string, password: string) => Promise<{ success: boolean; msg?: void }>;
+  loginEmail: (email: string, password: string) => Promise<{ success: boolean; msg?: string }>;
+  registerEmail: (email: string, password: string) => Promise<{ success: boolean; msg?: string }>;
   sendFriendRequest: (recipientEmail: string) => Promise<void>;
   respondToFriendRequest: (
     requestId: string,
@@ -423,8 +423,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  async function sendFriendRequest(recipientUsername: string) {
-    return callSendFriendRequest({ recipientUsername });
+  async function sendFriendRequest(recipientEmail: string): Promise<void> {
+    await callSendFriendRequest({ recipientEmail });
   }
 
   async function respondToFriendRequest(
@@ -468,59 +468,58 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }
 
-  async function manageJamPermissions(jamId: string, targetUsername: string, role: 'editor' | 'viewer' | 'remove') {
-    if (!currentUser) throw new Error("Not authenticated");
-    return callManageJamPermissions({
+  async function manageJamPermissions(jamId: string, targetUsername: string, role: 'editor' | 'viewer' | 'remove'): Promise<void> {
+    await callManageJamPermissions({
       jamId,
       targetUsername,
       role
     });
   }
 
-  async function manageBibleRoomInvite(friendId: string, action: 'invite' | 'uninvite') {
+  async function manageBibleRoomInvite(friendId: string, action: 'invite' | 'uninvite'): Promise<void> {
     if (!currentUser) throw new Error("Not authenticated");
-    return callManageBibleRoomInvite({ friendId, action });
+    await callManageBibleRoomInvite({ friendId, action });
   }
 
-  async function setBibleRoomSharing(sharing: boolean) {
+  async function setBibleRoomSharing(sharing: boolean): Promise<void> {
     if (!currentUser) throw new Error("Not authenticated");
-    return callSetBibleRoomSharing({ sharing });
+    await callSetBibleRoomSharing({ sharing });
   }
 
   async function updateUserProfile(data: {
-      name?: string;
-      dob?: string;
-      newUsername?: string;
-      photoFile?: File;
-    }) {
-      if (!currentUser) throw new Error("Not authenticated");
-
-      // Construct the payload, ensuring we don't send "undefined" fields
-      const payload: { [key: string]: string | File | undefined } = {};
-      if (data.name !== undefined) payload.name = data.name;
-      if (data.dob !== undefined) payload.dob = data.dob;
-      if (data.newUsername !== undefined) payload.newUsername = data.newUsername;
-      
-      try {
-          if (data.photoFile) {
-              const filePath = `profile-pictures/${currentUser.uid}/${Date.now()}_${data.photoFile.name}`;
-              const storageRef = ref(storage, filePath);
-              const uploadTask = await uploadBytes(storageRef, data.photoFile);
-              payload.photoURL = await getDownloadURL(uploadTask.ref);
-          }
-          
-          // If the payload is empty (e.g., only a photo was updated), don't send an empty object
-          if (Object.keys(payload).length === 0 && !data.photoFile) {
-              return; 
-          }
-
-          return callUpdateUserProfile(payload);
-      } catch (error) {
-          console.error("Error updating profile:", error);
-          throw error;
+    name?: string;
+    dob?: string;
+    newUsername?: string;
+    photoFile?: File;
+  }): Promise<void> {
+    if (!currentUser) throw new Error("Not authenticated");
+  
+    // Construct the payload, ensuring we don't send "undefined" fields
+    const payload: { [key: string]: string | File | undefined } = {};
+    if (data.name !== undefined) payload.name = data.name;
+    if (data.dob !== undefined) payload.dob = data.dob;
+    if (data.newUsername !== undefined) payload.newUsername = data.newUsername;
+    
+    try {
+      if (data.photoFile) {
+        const filePath = `profile-pictures/${currentUser.uid}/${Date.now()}_${data.photoFile.name}`;
+        const storageRef = ref(storage, filePath);
+        const uploadTask = await uploadBytes(storageRef, data.photoFile);
+        payload.photoURL = await getDownloadURL(uploadTask.ref);
       }
+      
+      // If the payload is empty (e.g., only a photo was updated), don't send an empty object
+      if (Object.keys(payload).length === 0 && !data.photoFile) {
+        return; 
+      }
+  
+      await callUpdateUserProfile(payload);
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      throw error;
     }
-
+  }
+  
   const contextValue: AuthContextType = {
     currentUser,
     userData,

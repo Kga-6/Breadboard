@@ -27,7 +27,7 @@ export default function Register() {
 
       const res = await registerEmail(email, password);
       if (!res.success) {
-        setError(res.msg);
+        setError(res.msg || "An unknown error occurred");
       }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "An unknown error occurred");
