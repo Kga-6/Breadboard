@@ -2,10 +2,16 @@ import { auth, firestore } from "../../../../../firebase/server";
 import { DecodedIdToken } from "firebase-admin/auth";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { userId: string, isForced: boolean } }
-) {
+export async function GET(request: NextRequest) {
+  
+  // Extract userId and isForced from the URL
+  const url = new URL(request.url);
+  const pathParts = url.pathname.split("/");
+  const userId = pathParts[pathParts.indexOf("users") + 1];
+
+  // Extract isForced from query string
+  const isForced = url.searchParams.get("isForced") === "true";
+  
   try {
     if (!firestore)
       return new NextResponse("Internal Error", { status: 500 });
@@ -24,12 +30,12 @@ export async function GET(
 
     const isAdmin = user?.role === "admin";
 
-    const valid = isAdmin || user?.uid === params.userId || params.isForced === true;
+    const valid = isAdmin || user?.uid === userId || isForced === true;
     if (!valid) return new NextResponse("Unauthorized", { status: 401 });
 
     const userDocument = await firestore
         .collection("users")
-        .doc(params.userId)
+        .doc(userId)
         .get();
 
     const userData = userDocument.data();
