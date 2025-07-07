@@ -11,7 +11,7 @@ export default function Jam() {
     const newJamId = await createJam();
     if (newJamId) {
       // Redirect to the new jam board page
-      router.push(`/jam/${newJamId}`);
+      router.push(`/jamLink/${newJamId}`);
     }
   };
 
