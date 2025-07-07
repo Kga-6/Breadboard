@@ -47,7 +47,7 @@ interface BibleViewProps {
 
 export default function BibleView({ sharedRoom }: BibleViewProps) {
 
-  const {currentUser, userData} = useAuth();
+  const {userData} = useAuth();
 
   const [language, setLanguage] = useState<string>("eng");
   const [bibles, setBibles] = useState<Bible[]>([]);
@@ -58,13 +58,6 @@ export default function BibleView({ sharedRoom }: BibleViewProps) {
   const [chapterId, setChapterId] = useState<string>("GEN.1");
   const [chapter, setChapter] = useState<Chapter | null>(null);
   
-  const params = useParams();
-  const uid = params.uid as string;
-
-  const handleInvite = async () =>{
-    
-  }
-
   useEffect(() => {
     const getBibles = async () => {
       const res = await fetch(`/api/scripture/bibles?ids=${allowed_bibles_string}`);

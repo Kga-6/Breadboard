@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getCache, setCache } from "@/utils/appcache";
 
 const API_KEY = process.env.BIBLE_API_KEY!;
 const BASE_URL = "https://api.scripture.api.bible/v1";

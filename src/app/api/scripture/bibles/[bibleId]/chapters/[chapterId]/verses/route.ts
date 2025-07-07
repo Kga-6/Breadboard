@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getCache, setCache } from "@/utils/appcache";
 
 const API_KEY = process.env.BIBLE_API_KEY!;
 const BASE_URL = "https://api.scripture.api.bible/v1";
@@ -36,7 +35,7 @@ export async function GET(
     const data = (await res.json());
 
     return NextResponse.json(data);
-  } catch (err) {
+  } catch (err: unknown) {
     console.error(`Error in GET /bibles/${bibleId}:`, err);
     return NextResponse.json(
       { error: "Internal Server Error" },

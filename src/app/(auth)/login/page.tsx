@@ -2,11 +2,8 @@
 "use client";
 
 import { useState } from "react";
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../../../../firebase/client";
 import Link from "next/link";
 import { useAuth } from "@/app/context/AuthContext"
-import { useRouter } from "next/navigation";
 
 export default function Login() {
 
@@ -22,8 +19,8 @@ export default function Login() {
     e.preventDefault();
     try {
       await loginEmail(email, password);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "An unknown error occurred");
     }
     setLoading(false)
   };
@@ -63,8 +60,9 @@ export default function Login() {
           />
           <button className="p-2 bg-amber-500 rounded-md text-white" type="submit" disabled={loading}>Login</button>
         </form>
-
+        
         <div className="flex flex-col mt-4">
+          {error && <p className="text-red-500 text-sm text-center mb-4">{error}</p>}
           <Link className="text-amber-800 text-sm text-center mb-4" href="/forgot-password">Forgot Password?</Link>
           <button className="bg-white shadow-sm h-[44px] rounded-md mb-4" onClick={handleloginGoogle}>Login in with Google</button>
           <Link className="text-center text-gray-500" href="/register">Don't have an account? <span className="text-amber-600 font-bold">register</span></Link>

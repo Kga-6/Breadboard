@@ -4,9 +4,6 @@ import { useState } from "react";
 import Image from "next/image";
 import { useAuth } from "@/app/context/AuthContext";
 import {
-  UserPlus,
-  Users,
-  Clock,
   CircleDot,
   Check,
   X,
@@ -22,7 +19,6 @@ export default function Friends() {
     respondToFriendRequest,
     cancelFriendRequest,
     removeFriend,
-    loading,
   } = useAuth();
 
   const [tab, setTab] = useState<"all" | "pending" | "online" | "add">("add");
@@ -40,9 +36,9 @@ export default function Friends() {
       await sendFriendRequest(addFriendUsername);
       setAddFriendUsername("");
       setMessage("Friend request sent!");
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      setError(err.message || "Error sending friend request.");
+      setError(err instanceof Error ? err.message : "Error sending friend request.");
     }
   };
 
@@ -52,9 +48,9 @@ export default function Friends() {
   ) => {
     try {
       await respondToFriendRequest(requestId, response);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      setError(err.message || "Error responding to friend request.");
+      setError(err instanceof Error ? err.message : "Error responding to friend request.");
     }
   };
 

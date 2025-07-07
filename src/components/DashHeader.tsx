@@ -1,13 +1,11 @@
 "use client"
 
 import { useAuth } from "@/app/context/AuthContext";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 export default function DashHeader(){
 
   const {currentUser, userData, logout, isPro, isAdmin} = useAuth();
-  const router = useRouter();
 
   return(
     <div className="flex justify-between items-center p-4 h-14 border-b">

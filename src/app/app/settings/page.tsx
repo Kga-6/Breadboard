@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from "@/app/context/AuthContext";
+import Image from 'next/image';
 
 export default function Settings() {
     const { userData, updateUserProfile } = useAuth();
@@ -29,7 +30,7 @@ export default function Settings() {
         setIsSubmitting(true);
 
         // Build a payload with ONLY the fields that have changed
-        const updatePayload: { [key: string]: any } = {};
+        const updatePayload: { [key: string]: string } = {};
         if (name !== userData.name) {
             updatePayload.name = name;
         }
@@ -50,8 +51,8 @@ export default function Settings() {
         try {
             await updateUserProfile(updatePayload);
             setMessage({ type: 'success', text: 'Profile updated successfully!' });
-        } catch (error: any) {
-            setMessage({ type: 'error', text: error.message || 'Failed to update profile.' });
+        } catch (error: unknown) {
+            setMessage({ type: 'error', text: error instanceof Error ? error.message : 'Failed to update profile.' });
         } finally {
             setIsSubmitting(false);
         }
@@ -66,8 +67,8 @@ export default function Settings() {
         try {
             await updateUserProfile({ photoFile: file });
             setMessage({ type: 'success', text: 'Profile picture updated!' });
-        } catch (error: any) {
-            setMessage({ type: 'error', text: error.message || 'Failed to upload image.' });
+        } catch (error: unknown) {
+            setMessage({ type: 'error', text: error instanceof Error ? error.message : 'Failed to upload image.' });
         } finally {
             setIsSubmitting(false);
         }
@@ -86,10 +87,12 @@ export default function Settings() {
           <div className="mb-8 p-6 bg-white rounded-lg shadow-md">
             <h2 className="text-xl font-semibold mb-4 text-gray-700">Profile Picture</h2>
             <div className="flex items-center gap-4">
-              <img
+              <Image
                 src={userData?.profilePictureUrl || '/default-avatar.jpg'}
                 alt="Profile"
                 className="w-20 h-20 rounded-full object-cover"
+                width={80}
+                height={80}
               />
               <input type="file" accept="image/*" onChange={handleProfilePictureChange} ref={fileInputRef} className="hidden" />
               <button

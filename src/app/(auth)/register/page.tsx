@@ -8,7 +8,6 @@ export default function Register() {
 
   const {registerEmail, loginGoogle} = useAuth();
 
-  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -30,8 +29,8 @@ export default function Register() {
       if (!res.success) {
         setError(res.msg);
       }
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "An unknown error occurred");
     }
     setLoading(false);
   };
@@ -53,14 +52,6 @@ export default function Register() {
       <div className="bg-gray-200 p-4 rounded-md">
         <h1 className="text-3xl mb-4">Create an account</h1>
         <form onSubmit={handleRegister} className="flex flex-col">
-          {/* <input
-            className="h-[44px] p-2 rounded-md text-black bg-white shadow-lg border border-gray-100 mb-2"
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Name"
-            required
-          /> */}
           <input
             className="h-[44px] p-2 rounded-md text-black bg-white shadow-lg border border-gray-100 mb-2"
             type="email"
@@ -89,7 +80,7 @@ export default function Register() {
         </form>
 
         <div className="flex flex-col mt-4">
-
+          {error && <p className="text-red-500 text-sm text-center mb-4">{error}</p>}
           <button className="bg-white shadow-sm h-[44px] rounded-md mb-4" onClick={handleloginGoogle}>Sign up with Google</button>
           <Link className="text-center text-gray-500" href="/login">Have an account? <span className="text-amber-600 font-bold">login</span></Link>
         </div>

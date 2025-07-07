@@ -7,6 +7,8 @@ import clsx from "clsx";
 import { useState } from "react";
 import ProfileMenu from "@/components/ProfileMenu";
 
+import Image from "next/image";
+
 export default function DashNav() {
 
   const { currentUser, userData } = useAuth();
@@ -58,7 +60,13 @@ export default function DashNav() {
       {userData && 
 
         <button onClick={handleProfileMenu} className={`flex items-center p-2 rounded-lg cursor-pointer ${showProfileMenu ? "bg-[#ebebeb]":"bg-white"}`}>
-          <img src={userData?.profilePictureUrl || `/default-avatar.jpg`} alt={userData?.uid} className="w-[28px] h-[28px] rounded-full" />
+          <Image
+            src={userData?.profilePictureUrl || "/default-avatar.jpg"}
+            alt={userData?.uid || "User profile"}
+            className="w-[28px] h-[28px] rounded-full"
+            width={28}
+            height={28}
+          />
           <span className="w-full text-left ml-2">{userData?.username}</span>
         </button>
 

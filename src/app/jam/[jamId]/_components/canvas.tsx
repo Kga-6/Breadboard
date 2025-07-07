@@ -20,7 +20,7 @@ export default function Canvas({jamId}:CanvasProps){
 
   const { name, avatar, username } = useSelf((me) => me.info);
 
-  console.log(name, avatar, username)
+  console.log(name, avatar, username, jamId)
 
   return(
     <main

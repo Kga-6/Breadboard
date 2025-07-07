@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
     console.log(`User '${user.uid}' attempting to access room '${room}'`);
 
     // Fetch room owners userData to check bibleRoom status
-    let ownersData = await getUserData(ownersUid)
+    const ownersData = await getUserData(ownersUid)
 
     if(!ownersData){
       return new NextResponse("Not Found: ownersData not found | BibleRoom", { status: 404 });
@@ -84,9 +84,9 @@ export async function POST(request: NextRequest) {
       return new NextResponse("Not Found: ownersFriends list not found | BibleRoom", { status: 404 });
     }
 
-    let ownersBibleRoom = ownersData?.bibleRoom
-    let invited = ownersBibleRoom.invited
-    let sharing = ownersBibleRoom.sharing
+    const ownersBibleRoom = ownersData?.bibleRoom
+    const invited = ownersBibleRoom.invited
+    const sharing = ownersBibleRoom.sharing
 
     console.log(invited,sharing,isFriend)
 

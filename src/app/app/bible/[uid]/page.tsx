@@ -6,7 +6,6 @@ import languages from "@/data/scriptureLang.json";
 import { useParams } from 'next/navigation';
 import { formatChapterHTML } from '@/utils/formater';
 import { BibleRoom } from '@/components/BibleRoom';
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { BibleInviteModal } from '@/components/BibleInviteModal'; // Import the new modal
 
@@ -45,12 +44,6 @@ interface Chapter {
 
 const allowed_bibles_string = "de4e12af7f28f599-02,06125adad2d5898a-01,9879dbb7cfe39e4d-01";
 
-interface Props {
-  params: {
-    uid: string
-  }
-}
-
 export default function Bible() {
 
   const router = useRouter();
@@ -69,10 +62,6 @@ export default function Bible() {
   
   const params = useParams();
   const uid = params.uid as string;
-
-  const handleInvite = async () =>{
-    
-  }
 
   useEffect(() => {
     const getBibles = async () => {

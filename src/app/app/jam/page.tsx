@@ -59,7 +59,7 @@ export default function Jam() {
             ))
           ) : (
             <p className="col-span-full text-gray-500">
-              You haven't created any jams yet.
+              You haven&apos;t created any jams yet.
             </p>
           )}
         </div>

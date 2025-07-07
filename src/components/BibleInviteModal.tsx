@@ -2,30 +2,7 @@
 
 import { useAuth } from "@/app/context/AuthContext";
 import { useState } from "react";
-
-// Re-use the Friend and UserType definitions from your AuthContext
-type Friend = {
-  id: string;
-  name: string;
-  username: string;
-  online: boolean;
-  photoURL: string | null;
-};
-
-type UserType = {
-  uid?: string;
-  name: string | null;
-  email: string | null;
-  username: string | null;
-  isPro?: boolean;
-  photoURL: string | null;
-  lastSeen?: any;
-  online?: boolean;
-  bibleRoom: {
-    invited: string [],
-    sharing: boolean,
-  },
-};
+import Image from "next/image";
 
 interface Props {
   isOpen: boolean;
@@ -99,7 +76,13 @@ export const BibleInviteModal = ({ isOpen, onClose }: Props) => {
             return (
               <div key={friend.id} className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-md">
                 <div className="flex items-center">
-                  <img src={friend.photoURL || `/default-avatar.jpg`} alt={friend.username} className="w-10 h-10 rounded-full mr-3" />
+                <Image
+                  src={friend.photoURL || "/default-avatar.jpg"}
+                  alt={friend.username}
+                  className="w-10 h-10 rounded-full mr-3"
+                  width={40}
+                  height={40}
+                />
                   <span>{friend.username}</span>
                 </div>
                 <button 

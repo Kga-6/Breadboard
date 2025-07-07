@@ -1,26 +1,24 @@
 "use client";
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { GoogleAuthProvider, onAuthStateChanged, signInWithPopup, User, signInWithEmailAndPassword, createUserWithEmailAndPassword, onIdTokenChanged } from "firebase/auth";
 import { auth, firestore, functions, storage  } from "../../../firebase/client";
 import {
   collection,
   doc,
   onSnapshot,
-  setDoc,
   getDoc,
   serverTimestamp,
   updateDoc,
   query,
   where,
-  writeBatch,
-  deleteDoc, // Import deleteDoc
+  Timestamp,
 } from "firebase/firestore";
 import { httpsCallable } from "firebase/functions";
 import { useRouter, usePathname } from "next/navigation";
 import Cookies from "js-cookie";
 
-export function getAuthToken():String | undefined {
+export function getAuthToken():string | undefined {
   return Cookies.get("firebaseIdToken");
 }
 
@@ -41,7 +39,7 @@ type UserType = {
   completed_onboarding: boolean;
   isPro?: boolean;
   profilePictureUrl: string | null;
-  lastSeen?: any;
+  lastSeen?: Timestamp;
   online?: boolean;
   dob: string;
   dobChangeCount: number | null | undefined;
@@ -72,7 +70,7 @@ type Jam = {
   title: string;
   authorId: string;
   authorUsername?: string; // Add this line
-  lastModified: any;
+  lastModified: Timestamp;
 };
 
 interface AuthContextType {
@@ -85,27 +83,27 @@ interface AuthContextType {
   sentRequests: FriendRequest[];
   receivedRequests: FriendRequest[];
   jams: Jam[];
-  manageJamPermissions: (jamId: string, targetUsername: string, role: 'editor' | 'viewer' | 'remove') => Promise < any > ;
+  manageJamPermissions: (jamId: string, targetUsername: string, role: 'editor' | 'viewer' | 'remove') => Promise < void > ;
   createJam: () => Promise<string | null>;
   loginGoogle: () => Promise<void>;
   logout: () => Promise<void>;
-  loginEmail: (email: string, password: string) => Promise<{ success: boolean; msg?: any }>;
-  registerEmail: (email: string, password: string) => Promise<{ success: boolean; msg?: any }>;
-  sendFriendRequest: (recipientEmail: string) => Promise<any>;
+  loginEmail: (email: string, password: string) => Promise<{ success: boolean; msg?: void }>;
+  registerEmail: (email: string, password: string) => Promise<{ success: boolean; msg?: void }>;
+  sendFriendRequest: (recipientEmail: string) => Promise<void>;
   respondToFriendRequest: (
     requestId: string,
     response: "accepted" | "declined"
   ) => Promise<void>;
   removeFriend: (friendId: string) => Promise<void>;
   cancelFriendRequest: (requestId: string) => Promise<void>;
-  manageBibleRoomInvite: (friendId: string, action: 'invite' | 'uninvite') => Promise<any>;
-  setBibleRoomSharing: (sharing: boolean) => Promise<any>;
+  manageBibleRoomInvite: (friendId: string, action: 'invite' | 'uninvite') => Promise<void>;
+  setBibleRoomSharing: (sharing: boolean) => Promise<void>;
   updateUserProfile: (data: {
     name?: string;
     dob?: string;
     newUsername?: string;
     photoFile?: File;
-  }) => Promise<any>;
+  }) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null >(null);
@@ -343,21 +341,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       await signInWithEmailAndPassword(auth, email, password);
       return { success: true };
-    } catch (error: any) {
+    } catch (error: unknown) {
       let msg = "An error occurred. Please try again.";
-      switch (error.code) {
-        case "auth/invalid-email":
-          msg = "Invalid email address";
-          break;
-        case "auth/user-not-found":
-          msg = "No user found with this email";
-          break;
-        case "auth/wrong-password":
-          msg = "Incorrect password";
-          break;
-        default:
-          msg = error.message;
+
+      if (typeof error === "object" && error !== null && "code" in error) {
+        switch ((error as { code: string }).code) {
+          case "auth/invalid-email":
+            msg = "Invalid email address";
+            break;
+          case "auth/user-not-found":
+            msg = "No user found with this email";
+            break;
+          case "auth/wrong-password":
+            msg = "Incorrect password";
+            break;
+          default:
+            // Check if error has a 'message' property
+            msg = "message" in error ? (error as { message: string }).message : msg;
+        }
+      } else {
+        // fallback for non-Firebase errors
+        msg = String(error);
       }
+
       return { success: false, msg };
     }
   };
@@ -368,21 +374,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       await createUserWithEmailAndPassword(auth, email, password);
       return { success: true };
-    } catch (error: any) {
+    } catch (error: unknown) {
       let msg = "An error occurred. Please try again.";
-      switch (error.code) {
-        case "auth/email-already-in-use":
-          msg = "Email is already in use";
-          break;
-        case "auth/invalid-email":
-          msg = "Invalid email address";
-          break;
-        case "auth/weak-password":
-          msg = "Password is too weak";
-          break;
-        default:
-          msg = error.message;
+    
+      if (typeof error === "object" && error !== null && "code" in error) {
+        switch ((error as { code: string }).code) {
+          case "auth/email-already-in-use":
+            msg = "Email is already in use";
+            break;
+          case "auth/invalid-email":
+            msg = "Invalid email address";
+            break;
+          case "auth/weak-password":
+            msg = "Password is too weak";
+            break;
+          default:
+            msg = "message" in error ? (error as { message: string }).message : msg;
+        }
+      } else {
+        msg = String(error);
       }
+    
       return { success: false, msg };
     }
   };
@@ -484,7 +496,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (!currentUser) throw new Error("Not authenticated");
 
       // Construct the payload, ensuring we don't send "undefined" fields
-      const payload: { [key: string]: any } = {};
+      const payload: { [key: string]: string | File | undefined } = {};
       if (data.name !== undefined) payload.name = data.name;
       if (data.dob !== undefined) payload.dob = data.dob;
       if (data.newUsername !== undefined) payload.newUsername = data.newUsername;

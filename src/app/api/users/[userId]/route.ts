@@ -17,7 +17,7 @@ export async function GET(
     if (auth && authToken)
       try {
           user = await auth.verifyIdToken(authToken);
-      } catch (error) {
+      } catch (error: unknown) {
           // One possible error is the token being expired, return forbidden
           console.log(error);
       }
@@ -35,7 +35,8 @@ export async function GET(
     const userData = userDocument.data();
 
     return NextResponse.json(userData);
-  } catch (error) {
+  } catch (error: unknown) {
+      console.error("Error in GET /users/:userId:", error);
       return new NextResponse("Internal Error", { status: 500 });
   }
 }
