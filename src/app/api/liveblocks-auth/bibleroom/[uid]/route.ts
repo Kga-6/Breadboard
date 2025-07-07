@@ -1,32 +1,12 @@
 import { auth, firestore } from "@/../firebase/server";
 import { DecodedIdToken } from "firebase-admin/auth";
 import { NextRequest, NextResponse } from "next/server";
+import { getUserData } from "@/utils/getUsersData";
 
 import { Liveblocks, RoomAccesses } from "@liveblocks/node";
 const liveblocks = new Liveblocks({
   secret: `${process.env.LIVEBLOCKS_SECRET_KEY}`,
 });
-
-export async function getUserData(userId: string) {
-  if (!firestore) {
-    throw new Error("Firestore not initialized");
-  }
-
-  const userDocumentRef = firestore.collection("users").doc(userId);
-  const userDocument = await userDocumentRef.get();
-
-  if (!userDocument.exists) {
-    return null;
-  }
-
-  const friendsCollection = await userDocumentRef.collection("friends").get();
-  const friends = friendsCollection.docs.map(doc => doc.id);
-
-  return {
-    ...userDocument.data(),
-    friends
-  };
-}
 
 export async function POST(request: NextRequest) {
   try {
