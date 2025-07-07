@@ -7,7 +7,7 @@ interface PageProps {
   };
 }
 
-export default function Jam({ params }: PageProps) {
+export default function JamLink({ params }: PageProps) {
   const jamId = params.jamId;
 
   return (
