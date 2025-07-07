@@ -31,7 +31,7 @@ export default function Jam() {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {jams.length > 0 ? (
             jams.map((jam) => (
-              <Link key={jam.id} href={`/jam/${jam.id}`}>
+              <Link key={jam.id} href={`/jamLink/${jam.id}`}>
                 <div className="block p-6 bg-white border border-gray-200 rounded-lg shadow hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700 cursor-pointer">
                   <h5 className="mb-2 text-xl font-bold tracking-tight text-gray-900 dark:text-white truncate">
                     {jam.title}
