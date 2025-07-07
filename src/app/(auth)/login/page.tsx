@@ -65,7 +65,7 @@ export default function Login() {
           {error && <p className="text-red-500 text-sm text-center mb-4">{error}</p>}
           <Link className="text-amber-800 text-sm text-center mb-4" href="/forgot-password">Forgot Password?</Link>
           <button className="bg-white shadow-sm h-[44px] rounded-md mb-4" onClick={handleloginGoogle}>Login in with Google</button>
-          <Link className="text-center text-gray-500" href="/register">Don't have an account? <span className="text-amber-600 font-bold">register</span></Link>
+          <Link className="text-center text-gray-500" href="/register">Don&apos;t have an account? <span className="text-amber-600 font-bold">register</span></Link>
         </div>
       </div>
     </div>
