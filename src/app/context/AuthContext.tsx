@@ -423,8 +423,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  async function sendFriendRequest(recipientEmail: string): Promise<void> {
-    await callSendFriendRequest({ recipientEmail });
+  async function sendFriendRequest(recipientUsername: string): Promise<void> {
+    await callSendFriendRequest({ recipientUsername });
   }
 
   async function respondToFriendRequest(
