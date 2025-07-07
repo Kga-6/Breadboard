@@ -4,22 +4,25 @@ import { getCache, setCache } from "@/utils/appcache";
 const API_KEY = process.env.BIBLE_API_KEY!;
 const BASE_URL = "https://api.scripture.api.bible/v1";
 
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { bibleId: string, bookId: string } }
-) {
+export async function GET(req: NextRequest) {
 
   if (!API_KEY) {
     console.error("Missing environment variable: BIBLE_API_KEY");
-    return NextResponse.json(
-      { error: "Server configuration error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Server configuration error" }, { status: 500 });
   }
 
-  const { bibleId, bookId } = params;
-  const cacheKey = `bible_${bibleId}_books_${bookId}`;
+  // Extract bibleId and bookId from the URL
+  const url = new URL(req.url);
+  const pathParts = url.pathname.split("/");
+  const bibleId = pathParts[pathParts.indexOf("bibles") + 1];
+  const bookId = pathParts[pathParts.indexOf("books") + 1];
 
+  if (!bibleId || !bookId) {
+    return NextResponse.json({ error: "Missing bibleId or bookId" }, { status: 400 });
+  }
+
+  const cacheKey = `bible_${bibleId}_books_${bookId}_chapters`;
+  
   try {
     // 1. Check Firestore cache
     const cachedData = await getCache(cacheKey);

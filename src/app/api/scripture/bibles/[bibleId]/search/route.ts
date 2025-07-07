@@ -3,20 +3,20 @@ import { NextRequest, NextResponse } from "next/server";
 const API_KEY = process.env.BIBLE_API_KEY!;
 const BASE_URL = "https://api.scripture.api.bible/v1";
 
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { bibleId: string } }
-) {
-
+export async function GET(req: NextRequest) {
   if (!API_KEY) {
     console.error("Missing environment variable: BIBLE_API_KEY");
-    return NextResponse.json(
-      { error: "Server configuration error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Server configuration error" }, { status: 500 });
   }
 
-  const { bibleId } = params;
+  // Extract bibleId and bookId from the URL
+  const url = new URL(req.url);
+  const pathParts = url.pathname.split("/");
+  const bibleId = pathParts[pathParts.indexOf("bibles") + 1];
+
+  if (!bibleId) {
+    return NextResponse.json({ error: "Missing bibleId" }, { status: 400 });
+  }
 
   try {
     // 1. Fetch from API
