@@ -9,6 +9,19 @@ import ProfileMenu from "@/components/ProfileMenu";
 
 import Image from "next/image";
 
+import { Button } from "@/components/ui/button"
+import { Skeleton } from "@/components/ui/skeleton"
+import { ProfileDropdownMenu } from "@/components/ProfileDropdownMenu"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import {DropdownMenuDemo} from "@/components/DropdownMenuDemo"
+
 export default function DashNav() {
 
   const { currentUser, userData } = useAuth();
@@ -57,20 +70,13 @@ export default function DashNav() {
         })}
       </div>
 
-      {userData && 
-
-        <button onClick={handleProfileMenu} className={`flex items-center p-2 rounded-lg cursor-pointer ${showProfileMenu ? "bg-[#ebebeb]":"bg-white"}`}>
-          <Image
-            src={userData?.profilePictureUrl || "/default-avatar.jpg"}
-            alt={userData?.uid || "User profile"}
-            className="w-[28px] h-[28px] rounded-full"
-            width={28}
-            height={28}
-          />
-          <span className="w-full text-left ml-2">{userData?.username}</span>
-        </button>
-
-      }
+      {userData ? (
+        <div>
+          <ProfileDropdownMenu/>
+        </div>
+       ) : (
+        (<Skeleton className="h-[40px] w-full rounded-full" />)
+       )}
 
       {showProfileMenu && userData && <ProfileMenu />}
     </nav>

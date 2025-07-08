@@ -1,8 +1,7 @@
-import { onCall, HttpsError } from "firebase-functions/v2/https";
-//import * as functions from "firebase-functions/v1";
-
+import { onCall, HttpsError, onRequest } from "firebase-functions/v2/https";
 import { onDocumentCreated } from 'firebase-functions/v2/firestore';
 import { beforeUserCreated, beforeUserSignedIn } from 'firebase-functions/v2/identity';
+import { WebhookHandler } from "@liveblocks/node";
 
 import { initializeApp } from "firebase-admin/app";
 import { getFirestore, FieldValue, Firestore } from "firebase-admin/firestore";
@@ -13,6 +12,10 @@ import { getAuth } from "firebase-admin/auth";
 initializeApp();
 const db = getFirestore();
 const auth = getAuth();
+
+// Initialize the Webhook class with your secret key
+const webhookHandler = new WebhookHandler("whsec_6V/28Hyq6fp03z2Pzmf7Gn+kij2aBIzp");
+const liveblocksSecretKey = "sk_dev_nJvd18ul5Mlwc9kWZeYeB-5n5RjLAp0jD7FzQc2rOFpUjA1LdNjcEn0lBEN7BCBx";
 
 // Types for user data
 interface UserProfile {
@@ -25,7 +28,10 @@ interface UserProfile {
   profilePictureUrl: string | null;
   isPro: boolean;
   online: boolean;
-  completed_onboarding: boolean;
+  onboarding: {
+    profilePicture: boolean;
+    username: boolean;
+  };
   lastSeen: FirebaseFirestore.Timestamp;
   bibleRoom: {
     invited: string[];
@@ -201,7 +207,10 @@ export const createUserProfile = onCall(async (request) => {
       profilePictureUrl: null,
       isPro: false,
       online: true, // Set to true on creation
-      completed_onboarding: false,
+      onboarding: {
+        profilePicture: false,
+        username: false,
+      },
       lastSeen: FieldValue.serverTimestamp() as FirebaseFirestore.Timestamp,
       bibleRoom: {
         invited: [],
@@ -476,15 +485,31 @@ export const removeFriend = onCall(async (request) => {
     throw new HttpsError("invalid-argument", "Friend ID is required.");
   }
 
+if (userId === friendId) {
+      throw new HttpsError("invalid-argument", "You cannot remove yourself as a friend.");
+  }
+
+  const userRef = db.collection("users").doc(userId);
+  const friendRef = db.collection("users").doc(friendId);
+  const userFriendRef = userRef.collection("friends").doc(friendId);
+  const friendUserRef = friendRef.collection("friends").doc(userId);
+
   const batch = db.batch();
-  const userFriendRef = db.collection("users").doc(userId).collection("friends").doc(friendId);
-  const friendUserRef = db.collection("users").doc(friendId).collection("friends").doc(userId);
 
   batch.delete(userFriendRef);
   batch.delete(friendUserRef);
+
+  batch.update(userRef, { 
+    'bibleRoom.invited': FieldValue.arrayRemove(friendId) 
+  });
+
+  batch.update(friendRef, { 
+    'bibleRoom.invited': FieldValue.arrayRemove(userId) 
+  });
+
   await batch.commit();
 
-  return { success: true, message: "Friend removed successfully." };
+  return { success: true, message: "Friend removed successfully and uninvited from Bible Room." };
 });
 
 export const cancelFriendRequest = onCall(async (request) => {
@@ -625,4 +650,70 @@ export const setBibleRoomSharing = onCall(async (request) => {
   await userRef.update({ 'bibleRoom.sharing': sharing });
 
   return { success: true, message: `Bible room sharing status updated to ${sharing}.` };
+});
+
+// Liveblocks Bible Room Handler DEMO
+export const liveblocksBibleRoomHandler = onRequest(async (request, response) => {
+  let event;
+
+  try {
+    event = webhookHandler.verifyRequest({
+      headers: request.headers,
+      rawBody: JSON.stringify(request.body),
+    });
+  } catch (error) {
+    console.error("Webhook verification failed:", error);
+    response.status(400).send("Webhook verification failed.");
+    return;
+  }
+
+  if (!event) {
+    console.error("No event received from Liveblocks.");
+    response.status(400).send("No event received from Liveblocks.");
+    return;
+  }
+
+  console.log(`Received event: ${event.type}`);
+
+  if (event.type === "userLeft") {
+    const { roomId, userId } = event.data;
+    const ownerId = roomId.replace("bible:", "");
+
+    if (userId === ownerId){
+      console.log(`Owner ${ownerId} has left their Bible Room. Closing the room.`);
+
+      const deleteRoomUrl = `https://api.liveblocks.io/v2/rooms/${roomId}`;
+
+      try {
+        // 2. Create a promise to delete the Liveblocks room
+        const deleteRoomPromise = fetch(deleteRoomUrl, {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${liveblocksSecretKey}` },
+        });
+
+        const ownerRef = db.collection("users").doc(ownerId);
+        const firestorePromise = ownerRef.update({
+          "bibleRoom.sharing": false,
+        });
+
+        const [deleteResponse] = await Promise.all([deleteRoomPromise, firestorePromise]);
+
+        if (deleteResponse.ok) {
+          console.log(`Successfully deleted room ${roomId}, disconnecting all users.`);
+        } else {
+          // Log an error if the room deletion fails, but don't crash
+          console.error(`Failed to delete room ${roomId}. Status: ${deleteResponse.status}`);
+        }
+
+        console.log(`Successfully processed leave event and reset owner's sharing status.`);
+
+      } catch (error) {
+        console.error(`Error processing owner-left event for room ${roomId}:`, error);
+        response.status(200).send("Acknowledged, but internal error occurred.");
+        return;
+      }
+    }
+  }
+
+  response.status(200).end();
 });
