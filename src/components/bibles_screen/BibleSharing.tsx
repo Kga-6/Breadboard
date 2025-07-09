@@ -43,7 +43,7 @@ export const BibleSharing = ({chapterData, userData}: {chapterData: Chapter, use
           <div className="*:data-[slot=avatar]:ring-background flex -space-x-2 *:data-[slot=avatar]:ring-2 *:data-[slot=avatar]:grayscale">
             {users.slice(0, 3).map(({ connectionId, info }) => {
               return (
-                <Tooltip>
+                <Tooltip key={connectionId}>
                   <TooltipTrigger asChild>
                     <Avatar className="w-10 h-10">  
                       <AvatarImage src={info.avatar} className="object-cover" />
