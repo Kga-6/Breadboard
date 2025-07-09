@@ -47,6 +47,7 @@ type UserType = {
     invited: string [],
     sharing: boolean,
   },
+  biblePersonalization: {}
 };
 
 type Friend = {
@@ -105,6 +106,7 @@ interface AuthContextType {
     newUsername?: string;
     photoFile?: File;
   }) => Promise<void>;
+  updateBiblePersonalization: (personalization: Record<string, any>) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null >(null);
@@ -534,6 +536,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       throw error;
     }
   }
+
+  async function updateBiblePersonalization(personalization: Record<string, any>): Promise<void> {
+    if (!currentUser) throw new Error("Not authenticated");
+    const userRef = doc(firestore, "users", currentUser.uid);
+    await updateDoc(userRef, { biblePersonalization: personalization });
+  }
   
   const contextValue: AuthContextType = {
     currentUser,
@@ -558,7 +566,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     manageBibleRoomInvite,
     setBibleRoomSharing,
     updateUserProfile,
-    createUserProfile
+    createUserProfile,
+    updateBiblePersonalization,
   };
 
   return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>;

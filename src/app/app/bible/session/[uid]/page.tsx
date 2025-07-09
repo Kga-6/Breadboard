@@ -2,12 +2,15 @@
 
 import { useAuth } from "@/app/context/AuthContext";
 import { useEffect, useState } from 'react';
-import languages from "@/data/scriptureLang.json";
+//import languages from "@/data/scriptureLang.json";
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import { formatChapterHTML } from '@/utils/formater';
 import { BibleRoom } from '@/components/BibleRoom';
-import { BibleInviteModal } from '@/components/BibleInviteModal'; // Import the new modal
+import { BibleInviteModal } from '@/components/BibleInviteModal';
 import { SidebarTrigger } from "@/components/ui/sidebar"
+import { Button } from "@/components/ui/button"
+import { BibleSharing } from "@/components/bibles_screen/BibleSharing";
+import BibleSolo from "@/components/bibles_screen/BibleSolo";
 
 import {
   Select,
@@ -16,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
+import { ChevronLeftIcon, ChevronRightIcon,LogOutIcon, UserRoundPlusIcon, SettingsIcon, BotIcon } from "lucide-react";
 
 interface Language {
   id: string;
@@ -44,101 +47,102 @@ interface ChapterRef {
 
 interface Chapter {
   id: string;
+  bibleId: string;
+  bookId: string;
   reference: string;
   content: string;
+  verseCount: number;
   previous?: ChapterRef;
   next?: ChapterRef;
+  copyright?: string;
 }
 
-
-const allowed_bibles_string = "de4e12af7f28f599-02,06125adad2d5898a-01,9879dbb7cfe39e4d-01";
+const allowed_bibles_string = "de4e12af7f28f599-02"//,06125adad2d5898a-01,9879dbb7cfe39e4d-01";
 
 export default function Bible() {
-
   const router = useRouter();
-  const params = useParams();
-  const {currentUser, userData, setBibleRoomSharing} = useAuth();
-  const searchParams = useSearchParams();
-  const [isInviteModalOpen, setInviteModalOpen] = useState(false);
+  const params = useParams();
+  const {userData, setBibleRoomSharing} = useAuth();
+  const searchParams = useSearchParams();
+  const [isInviteModalOpen, setInviteModalOpen] = useState(false);
 
-  const [language, setLanguage] = useState<string>("eng");
-  const [bibleId, setBibleId] = useState<string>(searchParams.get('bibleId') || "de4e12af7f28f599-02");
-  const [bibles, setBibles] = useState<Bible[]>([]);
-  const [bookId, setBookId] = useState<string>(searchParams.get('bookId') || "GEN");
-  const [books, setBooks] = useState<Book[]>([]);
-  const [chapterId, setChapterId] = useState<string>(searchParams.get('chapterId') || "GEN.1");
-  const [chapters, setChapters] = useState<ChapterRef[]>([]);
-  const [chapter, setChapter] = useState<Chapter | null>(null);
-  
+  const [language, setLanguage] = useState<string>("eng");
+  const [bibleId, setBibleId] = useState<string>(searchParams.get('bibleId') || "de4e12af7f28f599-02");
+  const [bibles, setBibles] = useState<Bible[]>([]);
+  const [bookId, setBookId] = useState<string>(searchParams.get('bookId') || "GEN");
+  const [books, setBooks] = useState<Book[]>([]);
+  const [chapterId, setChapterId] = useState<string>(searchParams.get('chapterId') || "GEN.1");
+  const [chapters, setChapters] = useState<ChapterRef[]>([]);
+  const [chapter, setChapter] = useState<Chapter | null>(null);
+
   const uid = params.uid as string;
 
-  console.log(uid)
+  const handleToggleSharing = async (value:boolean) => {
+    try {
+      await setBibleRoomSharing(value);
+    } catch (error) {
+      console.error("Failed to update sharing status:", error);
+      // Optionally show an error message to the user
+    }
+  };
 
-  useEffect(() => {
-    const getBibles = async () => {
-      const res = await fetch(`/api/scripture/bibles?ids=${allowed_bibles_string}`);
+  console.log(uid)
 
-      const data = await res.json();
-      setBibles(data?.data || []);
-    };
-    getBibles();
-  }, []);
+  useEffect(() => {
+    const getBibles = async () => {
+      const res = await fetch(`/api/scripture/bibles?ids=${allowed_bibles_string}`);
+      const data = await res.json();
+      setBibles(data?.data || []);
+    };
 
-  useEffect(() => {
-    if (!bibleId) return;
-    const getBooks = async () => {
-      const res = await fetch(`/api/scripture/bibles/${bibleId}/books`);
-      const data = await res.json();
-      setBooks(data?.data || []);
-    };
-    getBooks();
-  }, [bibleId]);
+    getBibles();
+  }, []);
 
-  useEffect(() => {
-    if (!bookId || !bibleId) return;
-    const getChapters = async () => {
-      const res = await fetch(`/api/scripture/bibles/${bibleId}/books/${bookId}/chapters`);
-      const data = await res.json();
-      setChapters(data?.data || []);
-    };
-    getChapters();
-  }, [bookId, bibleId]);
+  useEffect(() => {
+    if (!bibleId) return;
+    const getBooks = async () => {
+      const res = await fetch(`/api/scripture/bibles/${bibleId}/books`);
+      const data = await res.json();
+      setBooks(data?.data || []);
+    };
 
-  useEffect(() => {
-    if (!chapterId || !bibleId) return;
-    const getChapter = async () => {
-      const res = await fetch(`/api/scripture/bibles/${bibleId}/chapters/${chapterId}`);
-      const data = await res.json();
-      setChapter(data?.data || null);
-    };
-    getChapter();
-  }, [chapterId, bibleId]);
+    getBooks();
+  }, [bibleId, bookId]);
 
-  const handleChapterChange = (newChapterId: string, newBookId: string) => {
-    setBookId(newBookId);
-    setChapterId(newChapterId);
-    // Optionally update the URL to reflect the new state
-    router.push(`/app/bible/session/${uid}?bibleId=${bibleId}&bookId=${newBookId}&chapterId=${newChapterId}`);
-  };
+  useEffect(() => {
+    if (!bookId || !bibleId) return;
+    const getChapters = async () => {
+      const res = await fetch(`/api/scripture/bibles/${bibleId}/books/${bookId}/chapters`);
+      const data = await res.json();
+      setChapters(data?.data || []);
+    };
 
-  const goToChapter = (chapter: ChapterRef | undefined) => {
-    if (!chapter?.id) return;
-    handleChapterChange(chapter.id, chapter.bookId);
-  };
+    getChapters();
+  }, [bookId, bibleId]);
 
-  const renderBible = (sharedRoom:boolean) => {
-    return(
-      <div className="p-4 max-w-2xl mx-auto">
+  useEffect(() => {
+    if (!chapterId || !bibleId) return;
+    const getChapter = async () => {
+      const res = await fetch(`/api/scripture/bibles/${bibleId}/chapters/${chapterId}`);
+      const data = await res.json();
+      setChapter(data?.data || null);
+    };
 
-        {chapter && (
-          <div className="prose max-w-none">
-            <h2 className="text-xl font-semibold mb-2">{chapter.reference}</h2>
-            <div dangerouslySetInnerHTML={{ __html: formatChapterHTML(chapter.content) }} />
-          </div>
-        )}
-      </div>
-    )
-  }
+    getChapter();
+  }, [chapterId, bibleId]);
+
+  const handleChapterChange = (newChapterId: string, newBookId: string) => {
+    setBookId(newBookId);
+    setChapterId(newChapterId);
+
+    // Optionally update the URL to reflect the new state
+    router.push(`/app/bible/session/${uid}?bibleId=${bibleId}&bookId=${newBookId}&chapterId=${newChapterId}`);
+  };
+
+  const goToChapter = (chapter: ChapterRef | undefined) => {
+    if (!chapter?.id) return;
+    handleChapterChange(chapter.id, chapter.bookId);
+  };
 
   return (
     <>
@@ -148,11 +152,10 @@ export default function Bible() {
         onClose={() => setInviteModalOpen(false)} 
       />
 
-      <header className="flex h-16 shrink-0 items-center sticky top-0 bg-white dark:bg-gray-500 z-10 gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
+      <header className="flex h-[74px] shrink-0 items-center sticky top-0 bg-white dark:bg-gray-500 z-10  transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
         <div className="flex items-center gap-2 px-4">
           <SidebarTrigger className="-ml-1" />
         </div>
-        <h1 className="text-2xl font-bold ">{`Bible`}</h1>
 
         <div className="  flex items-center gap-4 px-4  w-full justify-center ">
           {/* <Select onValueChange={(value) => setLanguage(value)} defaultValue={language}>
@@ -201,6 +204,35 @@ export default function Bible() {
             </Select>
           )}
         </div>
+
+        {userData && userData.uid == uid && (
+          <div className="flex items-center ">
+            <div className="mr-2">
+              <Button variant="outline" onClick={() => setInviteModalOpen(true)}><UserRoundPlusIcon className="w-4 h-4" /></Button>
+            </div>
+            <div className="mr-2">
+              <Button variant="outline" onClick={() => console.log("Settings")}><SettingsIcon className="w-4 h-4" /></Button>
+            </div>
+
+          </div>
+        )}
+        <div className="mr-2">
+            <Button variant="outline" onClick={() => console.log("AI Chat")}><BotIcon className="w-4 h-4" /></Button>
+        </div>
+        {userData && userData.uid == uid && userData.bibleRoom.sharing && (
+          <div className="mr-2">
+            <Button variant="destructive" onClick={() => {
+              handleToggleSharing(false);
+            }}>End Session</Button>
+          </div>
+        )}
+        {userData && userData.uid != uid && (
+          <div className="mr-2">
+            <Button variant="destructive" onClick={() => {
+              router.push(`/app/bible/session/${userData.uid}`);
+            }}><LogOutIcon className="w-4 h-4" /></Button>
+          </div>
+        )}
       </header>
 
 
@@ -224,15 +256,17 @@ export default function Bible() {
             <ChevronRightIcon className="w-8 h-8" />
           </button>
         </div>
-
-        {/* Bible Content (scrollable) */}
+          
+        {/* userData.bibleRoom.invited.length > 0 */}
         <main className="h-full overflow-y-auto px-16">
-          {(userData && userData.bibleRoom.sharing && userData.uid == uid || (userData && uid != userData.uid)) ? (
-            <BibleRoom roomId={uid}>
-              {renderBible(true)}
-            </BibleRoom>
-          ) : (
-            renderBible(false)
+          {chapter && userData && (
+            ( userData.bibleRoom.sharing && userData.uid == uid || (userData && uid != userData.uid)) ? (
+              <BibleRoom roomId={uid}>  
+                <BibleSharing chapterData={chapter} userData={userData}/>
+              </BibleRoom>
+            ) : (
+              <BibleSolo chapterData={chapter} userData={userData}/>
+            )
           )}
         </main>
       </div>

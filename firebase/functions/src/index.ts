@@ -37,6 +37,17 @@ interface UserProfile {
     invited: string[];
     sharing: boolean;
   };
+  biblePersonalization:{
+    // "de4e12af7f28f599-02": {    // Bible ID
+    //   "REV": {                    // Book ID
+    //     "REV.1": {                // Chapter ID
+    //       "1": "bg-red-200",    // Verse '1' will be red
+    //       "5": "bg-yellow-100",   // Verse '5' will have a yellow background
+    //       "12": "bg-blue-200",   // Verse '12' will be blue
+    //     }
+    //   }
+    // }
+  }
   createdAt: FirebaseFirestore.Timestamp;
   updatedAt: FirebaseFirestore.Timestamp;
   isVerified: boolean;
@@ -130,7 +141,7 @@ export const beforeUserSignedInTrigger = beforeUserSignedIn(async (event) => {
   if (!user) {
     return;
   }
-  
+
   // Add any sign-in validation logic here
   console.log(`User ${user.uid} is signing in`);
   
@@ -215,6 +226,17 @@ export const createUserProfile = onCall(async (request) => {
       bibleRoom: {
         invited: [],
         sharing: false
+      },
+      biblePersonalization:{
+        "de4e12af7f28f599-02": {    // Bible ID
+          "REV": {                    // Book ID
+            "REV.1": {                // Chapter ID
+              "1": "bg-red-200",    // Verse '1' will be red
+              "5": "bg-yellow-100",   // Verse '5' will have a yellow background
+              "12": "bg-blue-200",   // Verse '12' will be blue
+            }
+          }
+        }
       },
       createdAt: FieldValue.serverTimestamp() as FirebaseFirestore.Timestamp,
       updatedAt: FieldValue.serverTimestamp() as FirebaseFirestore.Timestamp,

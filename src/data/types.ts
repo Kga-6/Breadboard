@@ -19,4 +19,5 @@ export type UserType = {
       invited: string [],
       sharing: boolean,
     },
+    biblePersonalization: Record<string, Record<string, Record<string, Record<string, string>>>>
   };
