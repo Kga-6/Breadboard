@@ -15,17 +15,17 @@ export function formatChapterHTML(rawHTML: string): string {
 
         if (el.classList.contains('v')) {
           // Verse number
-          formatted += `<span class="text-gray-500 text-xs mr-1 relative pb-2">${el.textContent}</span>`;
+          formatted += `<span class="text-gray-500 text-xs mr-1 relative pb-2 dark:text-gray-400">${el.textContent}</span>`;
         } else if (el.classList.contains('nd')) {
           // Special LORD tag
-          formatted += `<span class="uppercase tracking-wide font-semibold">${el.textContent}</span>`;
+          formatted += `<span class="uppercase tracking-wide font-semibold dark:text-white">${el.textContent}</span>`;
         } else if (el.classList.contains('wj')) {
           // Jesus Words
           const cleanText = el.textContent?.replace(/^¶\s*/, '') ?? '';
           formatted += `<span class="text-red-500">${cleanText}</span>`;
         } else if (el.classList.contains('add')) {
           // Italicized additions
-          formatted += `<i>${el.textContent}</i>`;
+          formatted += `<i class="dark:text-white">${el.textContent}</i>`;
         } else {
           formatted += el.outerHTML;
         }
@@ -39,7 +39,7 @@ export function formatChapterHTML(rawHTML: string): string {
       }
     });
 
-    formattedParagraphs.push(`<p class="leading-7 mb-4 text-[16px] text-black">${formatted.trim()}</p>`);
+    formattedParagraphs.push(`<p class="leading-7 mb-4 text-[16px] text-black dark:text-white">${formatted.trim()}</p>`);
   });
 
   return formattedParagraphs.join('\n');

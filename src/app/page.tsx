@@ -2,9 +2,12 @@
 
 import Link from "next/link"
 import { useAuth } from "./context/AuthContext"
+import { Button } from "@/components/ui/button"
+import { useRouter } from "next/navigation"
 
 export default function Home(){
 
+    const router = useRouter();
     const auth = useAuth();
 
     return (
@@ -13,13 +16,11 @@ export default function Home(){
         
         <div>
           {!auth?.currentUser && (
-            <>
-              <Link className="font-bold" href="/login">Login</Link>
-            </>
+            <Button onClick={() => router.push("/login")}>Login</Button>
           )}
 
           {auth?.currentUser && (
-            <Link href="/app/home">START</Link>
+            <Button onClick={() => router.push("/app/home")}>START</Button>
           )}
         </div>
         

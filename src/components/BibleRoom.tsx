@@ -7,6 +7,7 @@ import {
   ClientSideSuspense,
 } from "@liveblocks/react/suspense";
 import { useAuth } from "@/app/context/AuthContext";
+import { useRouter } from "next/navigation";
 
 interface RoomProps {
   children: ReactNode,
@@ -15,6 +16,7 @@ interface RoomProps {
 
 export function BibleRoom({ children, roomId }: RoomProps ) {
   const {currentUser, userData} = useAuth();
+  const router = useRouter();
 
   return (
     <LiveblocksProvider 
@@ -39,15 +41,29 @@ export function BibleRoom({ children, roomId }: RoomProps ) {
             body: JSON.stringify({ room, userInfo: userData , ownersUid: roomId }), 
           });
 
+
           if (!response.ok) {
-              // Handle auth errors from your backend
-              const errorText = await response.text();
-              throw new Error(`Authentication failed: ${errorText}`);
+            const errorText = await response.text();
+
+            if (response.status === 404) {
+              // In Next.js App Router, you can use the not-found.js file
+              router.push('/app/bible/not-found'); 
+            } else if (response.status === 403) {
+              // Redirect to a custom unauthorized page
+              router.push('/app/bible/unauthorized');
+            } else {
+              // Redirect to a generic error page for other server errors
+              router.push('/app/bible/error');
+            }
+            
+            throw new Error(`Authentication failed: ${errorText}`);
           }
 
           // Return the authorization token to Liveblocks
           return await response.json();
         }
+
+        throw new Error("Could not get user ID token for authentication.");
       }}
       
     >

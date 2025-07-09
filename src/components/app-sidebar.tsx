@@ -19,13 +19,14 @@ import { Home, Book, Users, BookOpen } from "lucide-react"
 import { ProfileDropdownMenu } from "@/components/ProfileDropdownMenu"
 import Link from "next/link"
 import { Skeleton } from "@/components/ui/skeleton"
+import { useRouter } from "next/navigation"
 
 
 export function AppSidebar() {
 
   const { userData } = useAuth();
   const pathname = usePathname();
-
+  const router = useRouter();
   const isActive = (url: string) => pathname === url;
   const { isMobile } = useSidebar()
 
@@ -37,7 +38,7 @@ export function AppSidebar() {
     },
     {
       title: "Bible",
-      url: `/app/bible/${userData?.uid}`,
+      url: `/app/bible/session/${userData?.uid}`,
       icon: Book,
     },
     {
@@ -74,11 +75,12 @@ export function AppSidebar() {
             <SidebarMenu>
               {items.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton tooltip={item.title} asChild>
-                    <a className={`mb-2 ${isActive(item.url) ? "bg-muted" : ""}`} href={item.url}>
+                  <SidebarMenuButton onClick={() => router.push(item.url)} tooltip={item.title} asChild>
+                    <a className={`mb-2 ${isActive(item.url) ? "bg-muted" : ""}`}>
                       <item.icon />
                       <span className="text-lg font-semibold">{item.title}</span>
                     </a>
+                    
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
