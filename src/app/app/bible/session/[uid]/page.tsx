@@ -86,8 +86,6 @@ export default function Bible() {
     }
   };
 
-  console.log(uid)
-
   useEffect(() => {
     const getBibles = async () => {
       const res = await fetch(`/api/scripture/bibles?ids=${allowed_bibles_string}`);
