@@ -19,13 +19,14 @@ async function fetchBibleData(path: string) {
   return data.data;
 }
 
-export default async function BiblePage({ params, searchParams }: { params: { uid: string }, searchParams: { bibleId: string, bookId: string, chapterId: string } }) {
+export default async function BiblePage({ params, searchParams }: { params: Promise<{ uid: string }>, searchParams: Promise<{ bibleId: string, bookId: string, chapterId: string }> }) {
   const { uid } = await params
+  const resolvedSearchParams = await searchParams
 
   // Get initial IDs from the URL
-  const bibleId = await searchParams.bibleId || "de4e12af7f28f599-02";
-  const bookId = await searchParams.bookId || "GEN";
-  const chapterId = await searchParams.chapterId || "GEN.1";
+  const bibleId = resolvedSearchParams.bibleId || "de4e12af7f28f599-02";
+  const bookId = resolvedSearchParams.bookId || "GEN";
+  const chapterId = resolvedSearchParams.chapterId || "GEN.1";
 
   // Fetch ALL initial data in parallel on the server
   const [
