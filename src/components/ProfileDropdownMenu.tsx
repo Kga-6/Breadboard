@@ -27,8 +27,6 @@ import {
 } from "@/components/ui/avatar"
 
 import { useAuth } from "@/app/context/AuthContext";
-import { Button } from "@/components/ui/button"
-import { UserType } from "@/data/types"
 import { useRouter } from "next/navigation";
 import { FaMoon, FaSun, FaDesktop } from "react-icons/fa";
 import { useTheme } from "next-themes"

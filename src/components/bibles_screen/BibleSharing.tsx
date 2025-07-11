@@ -5,7 +5,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { RoomProvider, useOthers, useSelf } from "@liveblocks/react";
 import { useRouter } from "next/router";
 
-import { UserType } from "@/data/types";
+import { UserTypes } from "@/types";
 
 interface ChapterRef {
   id: string;
@@ -25,7 +25,7 @@ interface Chapter {
   copyright?: string;
 }
 
-export const BibleSharing = ({chapterData, userData}: {chapterData: Chapter, userData: UserType}) => {
+export const BibleSharing = ({chapterData, userData}: {chapterData: Chapter, userData: UserTypes}) => {
 
   const users = useOthers();
   const currentUser = useSelf();

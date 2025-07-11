@@ -26,7 +26,7 @@ export interface UserTypes {
     invited: string [],
     sharing: boolean,
   },
-  biblePersonalization: {},//Record<string, Record<string, Record<string, Record<string, string>>>>
+  biblePersonalization: Record<string, Record<string, Record<string, Record<string, string>>>>;
   lastSeen?: FirebaseFirestore.Timestamp;
   createdAt: FirebaseFirestore.Timestamp;
   updatedAt: FirebaseFirestore.Timestamp;

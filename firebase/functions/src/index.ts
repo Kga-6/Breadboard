@@ -205,7 +205,7 @@ export const createUserProfile = onCall(async (request) => {
         invited: [],
         sharing: false,
       },
-      biblePersonalization: {},
+      biblePersonalization: {} as Record<string, Record<string, Record<string, Record<string, string>>>>,
       lastSeen: FieldValue.serverTimestamp() as FirebaseFirestore.Timestamp,
       createdAt: FieldValue.serverTimestamp() as FirebaseFirestore.Timestamp,
       updatedAt: FieldValue.serverTimestamp() as FirebaseFirestore.Timestamp,

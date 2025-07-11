@@ -1,4 +1,4 @@
-import { UserType } from "@/data/types";
+import { UserTypes } from "@/types";
 
 interface ChapterRef {
   id: string;
@@ -27,7 +27,7 @@ const selectedVerses: Record<string, Record<string, Record<string, number[]>>> =
   }
 };
 
-export function formatChapterHTML(chapterData: Chapter, userData: UserType, selectedVerseNumbers: number[] = []): string {
+export function formatChapterHTML(chapterData: Chapter, userData: UserTypes, selectedVerseNumbers: number[] = []): string {
   const rawHTML = chapterData.content;
   if (!rawHTML) return '';
 

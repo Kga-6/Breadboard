@@ -1,5 +1,5 @@
 import { formatChapterHTML } from "@/utils/formater";
-import { UserType } from "@/data/types";
+import { UserTypes } from "@/types";
 import { useAuth } from "@/app/context/AuthContext";
 import { useState, useMemo } from "react";
 import VerseSelectionDrawer from "@/components/VerseSelectionDrawer";
@@ -39,7 +39,7 @@ export default function BibleSolo({
   friends,
 }: {
   chapterData: Chapter;
-  userData: UserType;
+  userData: UserTypes;
   bibleLocalName: string;
   bookLocalName: string;
   friends: Friend[];

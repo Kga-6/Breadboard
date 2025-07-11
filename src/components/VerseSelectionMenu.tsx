@@ -1,5 +1,4 @@
 import React from "react";
-import { UserType } from "@/data/types";
 
 interface VerseSelectionMenuProps {
   isHighlighted: boolean;
