@@ -7,14 +7,7 @@ import {
   AvatarImage,
 } from "@/components/ui/avatar"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-
-type Friend = {
-  id: string;
-  name: string;
-  username: string;
-  online: boolean;
-  photoURL: string | null;
-};
+import { FriendTypes } from "@/types";
 
 interface VerseSelectionMenuProps {
   isHighlighted: boolean;
@@ -23,7 +16,7 @@ interface VerseSelectionMenuProps {
   onCopy: () => void;
   onClose: () => void;
   formattedReference: string;
-  friends: Friend[];
+  friends: FriendTypes[];
 }
 
 export default function VerseSelectionDrawer({

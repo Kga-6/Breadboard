@@ -11,9 +11,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
-import { useState, useRef } from "react"
+import { useState } from "react"
 
 export default function DisplayNameEdit({ displayName, updateUserProfile, setShowDisplayNameEdit, showDisplayNameEdit }: { displayName: string, updateUserProfile: (payload: { name: string }) => void, setShowDisplayNameEdit: (show: boolean) => void, showDisplayNameEdit: boolean }) {
   

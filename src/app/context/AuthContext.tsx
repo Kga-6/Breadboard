@@ -19,7 +19,8 @@ import { httpsCallable } from "firebase/functions";
 import { useRouter, usePathname } from "next/navigation";
 import Cookies from "js-cookie";
 
-import { UserTypes } from "@/types";
+// [ TYPES ] //
+import { UserTypes, FriendTypes, FriendRequestTypes, JamTypes } from "@/types";
 
 export function getAuthToken():string | undefined {
   return Cookies.get("firebaseIdToken");
@@ -33,62 +34,16 @@ export function removeAuthToken(): void {
   return Cookies.remove("firebaseIdToken");
 }
 
-// type UserType = {
-//   uid?: string;
-//   name: string | null;
-//   email: string | null;
-//   username: string | null;
-//   usernameLower: string | null;
-//   completed_onboarding: boolean;
-//   isPro?: boolean;
-//   profilePictureUrl: string | null;
-//   lastSeen?: Timestamp;
-//   online?: boolean;
-//   dob: string;
-//   dobChangeCount: number | null | undefined;
-//   gender: string | null;
-//   language: string | null;
-//   bibleRoom: {
-//     invited: string [],
-//     sharing: boolean,
-//   },
-//   biblePersonalization: {}
-// };
-
-type Friend = {
-  id: string;
-  name: string;
-  username: string;
-  online: boolean;
-  photoURL: string | null;
-};
-
-type FriendRequest = {
-  id: string;
-  name: string;
-  username: string;
-  from: string;
-  photoURL: string | null;
-};
-
-type Jam = {
-  id: string;
-  title: string;
-  authorId: string;
-  authorUsername?: string; // Add this line
-  lastModified: Timestamp;
-};
-
 interface AuthContextType {
   currentUser: User | null;
   userData: UserTypes | null;
   isAdmin: boolean;
   isPro: boolean;
   loading: boolean;
-  friends: Friend[];
-  sentRequests: FriendRequest[];
-  receivedRequests: FriendRequest[];
-  jams: Jam[];
+  friends: FriendTypes[];
+  sentRequests: FriendRequestTypes[];
+  receivedRequests: FriendRequestTypes[];
+  jams: JamTypes[];
   manageJamPermissions: (jamId: string, targetUsername: string, role: 'editor' | 'viewer' | 'remove') => Promise < void > ;
   createJam: () => Promise<string | null>;
   loginGoogle: () => Promise<void>;
@@ -128,10 +83,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const [isPro, setIsPro] = useState<boolean>(false);
   const [loading, setLoading] = useState(true);
-  const [friends, setFriends] = useState<Friend[]>([]);
-  const [sentRequests, setSentRequests] = useState<FriendRequest[]>([]);
-  const [receivedRequests, setReceivedRequests] = useState<FriendRequest[]>([]);
-  const [jams, setJams] = useState<Jam[]>([]);
+  const [friends, setFriends] = useState<FriendTypes[]>([]);
+  const [sentRequests, setSentRequests] = useState<FriendRequestTypes[]>([]);
+  const [receivedRequests, setReceivedRequests] = useState<FriendRequestTypes[]>([]);
+  const [jams, setJams] = useState<JamTypes[]>([]);
 
   const callSendFriendRequest = httpsCallable(functions, "sendFriendRequest");
   const callRespondToFriendRequest = httpsCallable(functions, "respondToFriendRequest");
@@ -223,7 +178,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               id: jamDoc.id,
               ...jamData,
               authorUsername, // Add the fetched username
-            } as Jam;
+            } as JamTypes;
           });
 
           const jamsList = await Promise.all(jamsListPromises);
@@ -251,7 +206,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             }
             return null;
           });
-          const friendsList = (await Promise.all(friendsListPromises)).filter(f => f !== null) as Friend[];
+          const friendsList = (await Promise.all(friendsListPromises)).filter(f => f !== null) as FriendTypes[];
           setFriends(friendsList);
         });
         unsubscribers.push(unsubFriends);
@@ -279,7 +234,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             }
             return null;
           });
-          const requests = (await Promise.all(requestsPromises)).filter(r => r !== null) as FriendRequest[];
+          const requests = (await Promise.all(requestsPromises)).filter(r => r !== null) as FriendRequestTypes[];
           setSentRequests(requests);
         });
         unsubscribers.push(unsubSent);
@@ -307,7 +262,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             }
             return null;
           });
-          const requests = (await Promise.all(requestsPromises)).filter(r => r !== null) as FriendRequest[];
+          const requests = (await Promise.all(requestsPromises)).filter(r => r !== null) as FriendRequestTypes[];
           setReceivedRequests(requests);
         });
         unsubscribers.push(unsubReceived);

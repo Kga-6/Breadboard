@@ -30,6 +30,7 @@ export async function GET(req: NextRequest) {
       headers: {
         "api-key": API_KEY,
       },
+      next: { revalidate: 3600 }, // Cache for 1 hour
     });
 
     if (!response.ok) {

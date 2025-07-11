@@ -33,6 +33,7 @@ export async function GET(req: NextRequest) {
     // 2. Fetch from API
    const res = await fetch(`${BASE_URL}/bibles/${bibleId}/books/${bookId}`, {
       headers: { "api-key": API_KEY },
+      next: { revalidate: 3600 }, // Cache for 1 hour
     });
 
     if (!res.ok) {

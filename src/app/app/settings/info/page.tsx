@@ -14,19 +14,6 @@ import DisplayNameEdit from "../_components/DisplayNameEdit"
 import UsernameEdit from "../_components/UsernameEdit"
 import EmailEdit from "../_components/EmailEdit"
 import PasswordEdit from "../_components/PasswordEdit"
-
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
 import { Calendar } from "@/components/ui/calendar"
 import {
   Popover,
@@ -56,7 +43,6 @@ export default function Settings() {
   const [showDisplayNameEdit, setShowDisplayNameEdit] = useState(false)
   const [showUsernameEdit, setShowUsernameEdit] = useState(false)
   const [showEmailEdit, setShowEmailEdit] = useState(false)
-
 
   // Account
   const [displayName, setDisplayName] = useState<string | ''>(userData?.name || '');
