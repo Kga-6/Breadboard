@@ -8,6 +8,8 @@ import {
   Check,
   X,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import FriendCard from "@/components/FriendCard";
 
 export default function Friends() {
   // All state and logic now comes from the AuthContext
@@ -21,7 +23,7 @@ export default function Friends() {
     removeFriend,
   } = useAuth();
 
-  const [tab, setTab] = useState<"all" | "pending" | "online" | "add">("add");
+  const [tab, setTab] = useState<"all" | "requests" | "add">("add");
   const [search, setSearch] = useState("");
   const [addFriendUsername, setAddFriendUsername] = useState("");
   const [error, setError] = useState("");
@@ -56,69 +58,40 @@ export default function Friends() {
 
   const filteredFriends = friends.filter((f) =>
     f.username.toLowerCase().includes(search.toLowerCase())
+
   );
 
-  const onlineFriends = filteredFriends.filter((f) => f.online);
+  const filteredReceivedRequests = receivedRequests.filter((f) =>
+    f.username.toLowerCase().includes(search.toLowerCase())
+  );
+
+  // const onlineFriends = filteredFriends.filter((f) => f.online);
 
   const renderFriendList = (list: typeof friends) => (
-    <ul className="space-y-3">
+    <>
+     <h2 className="text-lg font-semibold mb-3">Friends ({list.length})</h2>
+     <ul className=" grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {list.length > 0 ? (
         list.map((friend) => (
-          <li
-            key={friend.id}
-            className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-          >
-            <div className="flex items-center gap-3">
-              <Image
-                src={
-                  friend.photoURL ||
-                  `/default-avatar.jpg`
-                }
-                alt={friend.username}
-                width={40}
-                height={40}
-                className="rounded-full"
-              />
-              <div className="flex-col">
-                <div className="font-bold">{friend.name}</div>
-                <div className="font-medium text-sm">@{friend.username}</div>
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              <span
-                className={`text-xs font-semibold flex items-center gap-1 ${
-                  friend.online ? "text-green-500" : "text-gray-400"
-                }`}
-              >
-                <CircleDot size={12} />
-                {friend.online ? "Online" : "Offline"}
-              </span>
-              <button
-                onClick={() => removeFriend(friend.id)}
-                className="p-2 text-gray-500 hover:text-red-500 hover:bg-red-100 rounded-full transition-colors"
-                title="Remove Friend"
-              >
-                <X size={16} />
-              </button>
-            </div>
-          </li>
+          <FriendCard key={friend.id} friend={friend} friendRequest={false} myRequest={false} />
         ))
-      ) : (
-        <p className="text-gray-500 text-center py-4">No friends to show.</p>
-      )}
-    </ul>
+        ) : (
+          <p className="text-gray-500 py-4">No results found.</p>
+        )}
+      </ul>
+    </>
   );
 
   console.log(sentRequests)
 
   return (
-    <div className="p-4 max-w-2xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6 text-gray-800">Friends</h1>
+    <div className="p-4 w-[950px] mx-auto dark:bg-[#1a1a1e]">
+      <h1 className="text-3xl font-bold mb-6 text-black dark:text-white">My Friends</h1>
 
       {/* Tabs */}
       <div className="flex mb-6">
-
-        {onlineFriends.length > 0 &&
+{/* 
+        {onlineFriends.length >= 0 &&
           <button
             onClick={() => setTab("online")}
             className={`flex items-center gap-2 px-4 py-2 font-medium transition-colors ${
@@ -129,9 +102,9 @@ export default function Friends() {
           >
             Online
           </button>
-        }
+        } */}
 
-        {friends.length > 0 &&
+        {friends.length >= 0 &&
           <button
             onClick={() => setTab("all")}
             className={`flex items-center gap-2 px-4 py-2 font-medium transition-colors ${
@@ -140,20 +113,20 @@ export default function Friends() {
                 : "text-gray-500 hover:text-blue-500"
             }`}
           >
-            All Friends
+            Friends
           </button> 
         }
 
-        {(receivedRequests.length > 0 || sentRequests.length > 0) &&
+        {(receivedRequests.length >= 0 || sentRequests.length >= 0) &&
           <button
-            onClick={() => setTab("pending")}
+            onClick={() => setTab("requests")}
             className={`flex items-center gap-2 px-4 py-2 font-medium transition-colors ${
-              tab === "pending"
+              tab === "requests"
                 ? "border-b-2 border-blue-500 text-blue-500"
                 : "text-gray-500 hover:text-blue-500"
             }`}
           >
-            Pending
+            Requests
             {receivedRequests.length > 0 && (
               <span className="bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
                 {receivedRequests.length}
@@ -189,7 +162,7 @@ export default function Friends() {
       )}
 
       {/* Content */}
-      <div className="bg-white  rounded-lg">
+      <div className="bg-white  rounded-lg dark:bg-transparent">
         {tab !== "add" && (
           <input
             type="text"
@@ -201,118 +174,66 @@ export default function Friends() {
         )}
 
         {tab === "all" && renderFriendList(filteredFriends)}
-        {tab === "online" && renderFriendList(onlineFriends)}
+        {/* {tab === "online" && renderFriendList(onlineFriends)} */}
 
-        {tab === "pending" && (
+        {tab === "requests" && (
           <>
-            <h2 className="text-lg font-semibold mb-3">Received Requests</h2>
-            <ul className="space-y-3 mb-6">
-              {receivedRequests.length > 0 ? (
-                receivedRequests.map((req) => (
-                  <li
-                    key={req.id}
-                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                  >
-                    <div className="flex items-center gap-3">
-                      <Image
-                        src={
-                          req.photoURL ||
-                          `/default-avatar.jpg`
-                        }
-                        alt={req.username}
-                        width={40}
-                        height={40}
-                        className="rounded-full"
-                      />
-                      <div className="flex-col">
-                        <div className="font-bold">{req.name}</div>
-                        <div className="font-medium text-sm">@{req.username}</div>
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() =>
-                          handleRequestResponse(req.id, "accepted")
-                        }
-                        className="p-2 text-gray-500 hover:text-green-500 hover:bg-green-100 rounded-full transition-colors"
-                        title="Accept"
-                      >
-                        <Check size={16} />
-                      </button>
-                      <button
-                        onClick={() =>
-                          handleRequestResponse(req.id, "declined")
-                        }
-                        className="p-2 text-gray-500 hover:text-red-500 hover:bg-red-100 rounded-full transition-colors"
-                        title="Decline"
-                      >
-                        <X size={16} />
-                      </button>
-                    </div>
-                  </li>
+            <h2 className="text-lg font-semibold mb-3">Requests ({filteredReceivedRequests.length})</h2>
+            <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+              {filteredReceivedRequests.length > 0 ? (
+                filteredReceivedRequests.map((req) => (
+                  <FriendCard key={req.id} friend={req} friendRequest={true} myRequest={false} />
                 ))
               ) : (
-                <p className="text-gray-500 text-center py-4">
-                  No pending requests.
+                <p className="text-gray-500  py-4">
+                  No results found.
                 </p>
               )}
             </ul>
 
-            <h2 className="text-lg font-semibold mb-3">Sent Requests</h2>
-            <ul className="space-y-3">
-              {sentRequests.map((req) => (
-                <li
-                  key={req.id}
-                  className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                >
-                  <div className="flex items-center gap-3">
-                    <Image
-                      src={
-                        req.photoURL ||
-                        `/default-avatar.jpg`
-                      }
-                      alt={req.username}
-                      width={40}
-                      height={40}
-                      className="rounded-full"
-                    />
-                    <div className="flex-col">
-                      <div className="font-bold">{req.name}</div>
-                      <div className="font-medium text-sm">@{req.username}</div>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => cancelFriendRequest(req.id)}
-                    className="text-gray-400 text-sm hover:text-red-500"
-                  >
-                    Cancel
-                  </button>
-                </li>
-              ))}
-            </ul>
+            
           </>
         )}
 
         {tab === "add" && (
-          <form onSubmit={handleSendRequest} className="flex flex-col gap-4">
-            <label htmlFor="add-friend-email" className="font-medium">
-              Add Friend by Username
-            </label>
-            <input
-              id="add-friend-email"
-              type="text"
-              placeholder="Enter username"
-              value={addFriendUsername}
-              onChange={(e) => setAddFriendUsername(e.target.value)}
-              className="p-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-            />
-            <button
-              type="submit"
-              className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition self-start"
-            >
-              Send Friend Request
-            </button>
-          </form>
+          <>
+            <form onSubmit={handleSendRequest} className="flex flex-col gap-4 border-b-1 pb-4 mb-6">
+              <label htmlFor="add-friend-email" className="font-medium text-lg">
+                Add Friend
+              </label>
+              <p>You can add friends with their Breadboard username.</p>
+              <div className="flex flex-row justify-between gap-2">
+                <input
+                  id="add-friend-email"
+                  type="text"
+                  placeholder="You can add friends with their Breadboard username."
+                  value={addFriendUsername}
+                  onChange={(e) => setAddFriendUsername(e.target.value)}
+                  className="p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 w-full h-10"
+                />
+                <Button
+                  type="submit"
+                  disabled={!addFriendUsername}
+                  className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition self-start h-10"
+                >
+                  Send Friend Request
+                </Button>
+              </div>
+            </form>
+
+            <h2 className="text-lg font-semibold mb-3">Sent Requests ({sentRequests.length})</h2>
+            <ul className=" grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {sentRequests.length > 0 ? (
+                sentRequests.map((req) => (
+                  <FriendCard key={req.id} friend={req} friendRequest={false} myRequest={true} />
+                ))
+              ) : (
+                <p className="text-gray-500  py-4">
+                  No results found.
+                </p>
+              )}
+            </ul>
+          </>
         )}
       </div>
     </div>

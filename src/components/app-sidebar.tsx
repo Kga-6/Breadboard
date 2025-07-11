@@ -15,7 +15,7 @@ import {
   SidebarHeader,
   useSidebar,
 } from "@/components/ui/sidebar"
-import { Home, Book, Users, BookOpen } from "lucide-react"
+import { Home, Book, Users, BookOpen, Play } from "lucide-react"
 import { ProfileDropdownMenu } from "@/components/ProfileDropdownMenu"
 import Link from "next/link"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -40,6 +40,11 @@ export function AppSidebar() {
       title: "Bible",
       url: `/app/bible/session/${userData?.uid}`,
       icon: Book,
+    },
+    {
+      title: "Play",
+      url: "/app/play",
+      icon: Play,
     },
     {
       title: "Friends",

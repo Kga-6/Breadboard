@@ -1,7 +1,7 @@
 "use client";
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { ref, uploadBytes, getDownloadURL, } from "firebase/storage";
-import { updateProfile , GoogleAuthProvider, onAuthStateChanged, signInWithPopup, User, signInWithEmailAndPassword, createUserWithEmailAndPassword, onIdTokenChanged } from "firebase/auth";
+import { updateProfile , GoogleAuthProvider, onAuthStateChanged, signInWithPopup, User, signInWithEmailAndPassword, createUserWithEmailAndPassword, onIdTokenChanged, sendEmailVerification, sendPasswordResetEmail  } from "firebase/auth";
 import { auth, firestore, functions, storage  } from "../../../firebase/client";
 import {
   collection,
@@ -43,6 +43,8 @@ type UserType = {
   online?: boolean;
   dob: string;
   dobChangeCount: number | null | undefined;
+  gender: string | null;
+  language: string | null;
   bibleRoom: {
     invited: string [],
     sharing: boolean,
@@ -105,8 +107,13 @@ interface AuthContextType {
     dob?: string;
     newUsername?: string;
     photoFile?: File;
+    newEmail?: string;
+    newGender?: string;
+    newLanguage?: string;
   }) => Promise<void>;
   updateBiblePersonalization: (personalization: Record<string, any>) => Promise<void>;
+  sendVerificationEmail: () => Promise<void>;
+  sendPasswordReset: (email: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null >(null);
@@ -508,6 +515,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     dob?: string;
     newUsername?: string;
     photoFile?: File;
+    newGender?: string;
+    newLanguage?: string;
+    newEmail?: string;
   }): Promise<void> {
     if (!currentUser) throw new Error("Not authenticated");
   
@@ -516,7 +526,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (data.name !== undefined) payload.name = data.name;
     if (data.dob !== undefined) payload.dob = data.dob;
     if (data.newUsername !== undefined) payload.newUsername = data.newUsername;
-    
+    if (data.newGender !== "Select gender") payload.newGender = data.newGender;
+    if (data.newLanguage !== "Select language") payload.newLanguage = data.newLanguage;
+    if (data.newEmail !== undefined) payload.newEmail = data.newEmail;
+
     try {
       if (data.photoFile) {
         const filePath = `profile-pictures/${currentUser.uid}/${Date.now()}_${data.photoFile.name}`;
@@ -541,6 +554,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (!currentUser) throw new Error("Not authenticated");
     const userRef = doc(firestore, "users", currentUser.uid);
     await updateDoc(userRef, { biblePersonalization: personalization });
+  }
+
+  async function sendVerificationEmail(): Promise<void> {
+    if (!currentUser) {
+      throw new Error("Not authenticated. Cannot send verification email.");
+    }
+    await sendEmailVerification(currentUser);
+  }
+  async function sendPasswordReset(email: string): Promise<void> {
+    if (!auth) throw new Error("Firebase auth not initialized");
+    await sendPasswordResetEmail(auth, email);
   }
   
   const contextValue: AuthContextType = {
@@ -568,6 +592,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     updateUserProfile,
     createUserProfile,
     updateBiblePersonalization,
+    sendVerificationEmail,
+    sendPasswordReset,
   };
 
   return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>;

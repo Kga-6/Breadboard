@@ -1,8 +1,8 @@
 import { formatChapterHTML } from "@/utils/formater";
 import { UserType } from "@/data/types";
 import { useAuth } from "@/app/context/AuthContext";
-import VerseSelectionMenu from "@/components/VerseSelectionMenu";
 import { useState, useMemo } from "react";
+import VerseSelectionDrawer from "@/components/VerseSelectionDrawer";
 
 interface ChapterRef {
   id: string;
@@ -22,16 +22,30 @@ interface Chapter {
   copyright?: string;
 }
 
+type Friend = {
+  id: string;
+  name: string;
+  username: string;
+  online: boolean;
+  photoURL: string | null;
+};
+
+
 export default function BibleSolo({
   chapterData,
   userData,
+  bibleLocalName,
+  bookLocalName,
+  friends,
 }: {
   chapterData: Chapter;
   userData: UserType;
+  bibleLocalName: string;
+  bookLocalName: string;
+  friends: Friend[];
 }) {
   const { updateBiblePersonalization } = useAuth();
   const [selectedVerses, setSelectedVerses] = useState<number[]>([]);
-  const [menuPosition, setMenuPosition] = useState<{ x: number; y: number } | null>(null);
 
   const handleVerseClick = (e: React.MouseEvent<HTMLDivElement>) => {
     const target = e.target as HTMLElement;
@@ -45,12 +59,6 @@ export default function BibleSolo({
         const newSelected = prevSelected.includes(verseId)
           ? prevSelected.filter((v) => v !== verseId)
           : [...prevSelected, verseId];
-
-        if (newSelected.length > 0 && !menuPosition) {
-          setMenuPosition({ x: e.clientX, y: e.clientY });
-        } else if (newSelected.length === 0) {
-          setMenuPosition(null);
-        }
 
         return newSelected;
       });
@@ -72,8 +80,7 @@ export default function BibleSolo({
     });
 
     await updateBiblePersonalization(newPersonalization);
-    setSelectedVerses([]);
-    setMenuPosition(null);
+    //setSelectedVerses([]);
   };
 
   const handleRemoveHighlight = async () => {
@@ -90,45 +97,12 @@ export default function BibleSolo({
 
     await updateBiblePersonalization(newPersonalization);
     setSelectedVerses([]);
-    setMenuPosition(null);
   };
 
   const handleCopy = () => {
-    if (selectedVerses.length === 0) return;
-    const { bookId, id: chapterId } = chapterData;
-    const sortedVerses = [...selectedVerses].sort((a, b) => a - b);
-    const verseText = `${bookId} ${chapterId.split(".")[1]}:${sortedVerses.join(",")}`;
-    navigator.clipboard.writeText(verseText);
+    // use BIBLE API || /v1/bibles/{bibleId}/verses/{verseId}
+    console.log("Verse copied")
     setSelectedVerses([]);
-    setMenuPosition(null);
-  };
-
-  const handleShowSelected = () => {
-    const versesByChapter: Record<string, number[]> = {};
-    const perso = userData.biblePersonalization;
-
-    if (perso) {
-        for (const bibleId in perso) {
-            for (const bookId in perso[bibleId]) {
-                for (const chapterId in perso[bibleId][bookId]) {
-                    const verseNumbers = Object.keys(perso[bibleId][bookId][chapterId]).map(Number);
-                    const key = `${bookId} ${chapterId.split('.')[1]}`;
-                    if (!versesByChapter[key]) {
-                        versesByChapter[key] = [];
-                    }
-                    versesByChapter[key].push(...verseNumbers);
-                }
-            }
-        }
-    }
-
-    const formattedStrings = Object.entries(versesByChapter).map(([chapter, verses]) => {
-        const sorted = verses.sort((a,b) => a - b);
-        return `${chapter}:${sorted.join(',')}`;
-    });
-
-    alert(`Selected Verses: ${formattedStrings.join("; ")}`);
-    setMenuPosition(null);
   };
 
   const isAnyVerseHighlighted = useMemo(() => {
@@ -141,6 +115,33 @@ export default function BibleSolo({
   const chapterHTML = useMemo(() => {
       return formatChapterHTML(chapterData, userData, selectedVerses);
     }, [chapterData, userData, selectedVerses]);
+
+  const formattedVerseReference = useMemo(() => {
+    if (selectedVerses.length === 0) return "";
+
+    const { bookId, id: chapterId, bibleId } = chapterData;
+    const chapterNumber = chapterId.split(".")[1];
+    const sortedVerses = [...selectedVerses].sort((a, b) => a - b);
+
+    const parts: string[] = [];
+    let i = 0;
+    while (i < sortedVerses.length) {
+      let start = sortedVerses[i];
+      let end = start;
+      while (i + 1 < sortedVerses.length && sortedVerses[i + 1] === end + 1) {
+        end = sortedVerses[i + 1];
+        i++;
+      }
+      if (start === end) {
+        parts.push(start.toString());
+      } else {
+        parts.push(`${start}-${end}`);
+      }
+      i++;
+    }
+
+    return `${bookLocalName} ${chapterNumber}:${parts.join(",")} ${bibleLocalName}`;
+  }, [selectedVerses, chapterData]);
 
   return (
     <div className="p-4 max-w-2xl mx-auto" onClick={handleVerseClick}>
@@ -155,24 +156,21 @@ export default function BibleSolo({
           </div>
         </div>
       )}
-      {menuPosition && selectedVerses.length > 0 && (
-        <div
-          style={{ top: menuPosition.y, left: menuPosition.x, position: "fixed" }}
-          onClick={(e) => e.stopPropagation()} // Prevent clicks inside the menu from closing it
-        >
-          <VerseSelectionMenu
-            isHighlighted={isAnyVerseHighlighted}
-            onHighlight={handleHighlight}
-            onRemoveHighlight={handleRemoveHighlight}
-            onCopy={handleCopy}
-            onShowSelected={handleShowSelected}
-            onClose={() => {
-              setSelectedVerses([]);
-              setMenuPosition(null);
-            }}
-          />
-        </div>
+
+      {selectedVerses.length > 0 && (
+        <VerseSelectionDrawer 
+          isHighlighted={isAnyVerseHighlighted}
+          onHighlight={handleHighlight}
+          onRemoveHighlight={handleRemoveHighlight}
+          formattedReference={formattedVerseReference}
+          onCopy={handleCopy}
+          friends={friends}
+          onClose={() => {
+            setSelectedVerses([]);
+          }}
+        />
       )}
+
     </div>
   );
 }

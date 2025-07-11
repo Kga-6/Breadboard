@@ -84,7 +84,7 @@ export function ProfileDropdownMenu(  ) {
             <DropdownMenuSeparator />
 
             <DropdownMenuGroup>
-              <DropdownMenuItem onClick={() => router.push("/app/settings")}>
+              <DropdownMenuItem onClick={() => router.push("/app/settings/info")}>
                 Settings
               </DropdownMenuItem>
 
@@ -100,7 +100,7 @@ export function ProfileDropdownMenu(  ) {
                       <FaMoon />
                       Dark
                     </DropdownMenuItem>
-                    <DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setTheme("system")}>
                       <FaDesktop />
                       System
                     </DropdownMenuItem>

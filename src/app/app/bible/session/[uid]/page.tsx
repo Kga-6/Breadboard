@@ -11,6 +11,7 @@ import { SidebarTrigger } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
 import { BibleSharing } from "@/components/bibles_screen/BibleSharing";
 import BibleSolo from "@/components/bibles_screen/BibleSolo";
+import { CircleX, Highlighter, Copy } from "lucide-react";
 
 import {
   Select,
@@ -62,7 +63,7 @@ const allowed_bibles_string = "de4e12af7f28f599-02"//,06125adad2d5898a-01,9879db
 export default function Bible() {
   const router = useRouter();
   const params = useParams();
-  const {userData, setBibleRoomSharing} = useAuth();
+  const {userData, setBibleRoomSharing, friends} = useAuth();
   const searchParams = useSearchParams();
   const [isInviteModalOpen, setInviteModalOpen] = useState(false);
 
@@ -74,6 +75,9 @@ export default function Bible() {
   const [chapterId, setChapterId] = useState<string>(searchParams.get('chapterId') || "GEN.1");
   const [chapters, setChapters] = useState<ChapterRef[]>([]);
   const [chapter, setChapter] = useState<Chapter | null>(null);
+
+  const [bibleLocalName, setBibleLocalName] = useState<string>("");
+  const [bookLocalName, setBookLocalName] = useState<string>("");
 
   const uid = params.uid as string;
 
@@ -91,6 +95,8 @@ export default function Bible() {
       const res = await fetch(`/api/scripture/bibles?ids=${allowed_bibles_string}`);
       const data = await res.json();
       setBibles(data?.data || []);
+      setBibleLocalName(data?.data[0].abbreviationLocal);
+      console.log(data?.data[0].abbreviationLocal);
     };
 
     getBibles();
@@ -102,6 +108,8 @@ export default function Bible() {
       const res = await fetch(`/api/scripture/bibles/${bibleId}/books`);
       const data = await res.json();
       setBooks(data?.data || []);
+      setBookLocalName(data?.data[0].name);
+      console.log(data?.data[0].name);
     };
 
     getBooks();
@@ -263,9 +271,10 @@ export default function Bible() {
                 <BibleSharing chapterData={chapter} userData={userData}/>
               </BibleRoom>
             ) : (
-              <BibleSolo chapterData={chapter} userData={userData}/>
+              <BibleSolo chapterData={chapter} userData={userData} bibleLocalName={bibleLocalName} bookLocalName={bookLocalName} friends={friends}/>
             )
           )}
+          
         </main>
       </div>
     </>

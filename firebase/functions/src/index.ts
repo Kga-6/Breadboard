@@ -323,19 +323,24 @@ export const updateUserProfile = onCall(async (request) => {
     throw new HttpsError("unauthenticated", "You must be logged in to update your profile.");
   }
   const userId = request.auth.uid;
-  const { name, dob, newUsername, photoURL } = request.data;
+  const { name, dob, newUsername, photoURL, newEmail, newGender, newLanguage } = request.data;
 
   const userRef = db.doc(`users/${userId}`);
   const updateData: { [key: string]: any } = {};
   let authUpdateData: { [key: string]: any } = {};
 
-  const userDoc = await userRef.get();
+  // Get both the Firestore document and the Firebase Auth record
+  const [userDoc, userRecord] = await Promise.all([
+    userRef.get(),
+    auth.getUser(userId)
+  ]);
+  
   const userData = userDoc.data();
   if (!userData) {
     throw new HttpsError("not-found", "User data not found.");
   }
 
-  // 1. Handle Display Name Update
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////////
   if (name) {
     if (typeof name !== 'string' || name.length === 0 || name.length > 50) {
       throw new HttpsError("invalid-argument", "Name must be a string between 1 and 50 characters.");
@@ -344,7 +349,39 @@ export const updateUserProfile = onCall(async (request) => {
     authUpdateData.displayName = name;
   }
 
-  // 2. Handle Date of Birth Update
+  if (newEmail && newEmail !== userData.email) {
+    // Check if the user signed up with email/password
+    const isPasswordUser = userRecord.providerData.some(
+      (provider) => provider.providerId === 'password'
+    );
+
+    if (!isPasswordUser) {
+      // If not a password user, block the email change.
+      throw new HttpsError(
+        "failed-precondition",
+        "Cannot change email for accounts created using Google. Please manage your email through your Google account."
+      );
+    }
+    
+    // ... rest of the email validation and update logic remains the same
+    if (typeof newEmail !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) {
+        throw new HttpsError("invalid-argument", "A valid email address is required.");
+    }
+    try {
+        await auth.getUserByEmail(newEmail);
+        throw new HttpsError("already-exists", "This email address is already in use.");
+    } catch (error: any) {
+        if (error.code !== 'auth/user-not-found') {
+             if (error instanceof HttpsError) throw error;
+             console.error("Error checking email uniqueness:", error);
+             throw new HttpsError("internal", "An unexpected error occurred.");
+        }
+    }
+    updateData.email = newEmail;
+    updateData.isVerified = false;
+    authUpdateData.email = newEmail;
+  }
+
   if (dob) {
     const dobChangeCount = userData.dobChangeCount || 0;
     if (dobChangeCount >= 2) {
@@ -357,7 +394,20 @@ export const updateUserProfile = onCall(async (request) => {
     updateData.dobChangeCount = FieldValue.increment(1);
   }
 
-  // 3. Handle Username Update
+  if (newGender) {
+    if (typeof newGender !== 'string' || !['Male', 'Female'].includes(newGender)) {
+      throw new HttpsError("invalid-argument", "Invalid gender.");
+    }
+    updateData.gender = newGender;
+  }
+
+  if(newLanguage){
+    if (typeof newLanguage !== 'string' || !['English', 'Spanish', "French"].includes(newLanguage)) {
+      throw new HttpsError("invalid-argument", "Invalid language.");
+    }
+    updateData.language = newLanguage;
+  }
+
   if (newUsername) {
     if (typeof newUsername !== 'string' || newUsername.length < 3 || newUsername.length > 25) {
       throw new HttpsError("invalid-argument", "Username must be 3–25 characters long.");
@@ -383,7 +433,6 @@ export const updateUserProfile = onCall(async (request) => {
     updateData.usernameChanges = FieldValue.arrayUnion(Date.now());
   }
 
-  // 4. Handle Profile Picture Update
   if (photoURL) {
     if (typeof photoURL !== 'string') {
       throw new HttpsError("invalid-argument", "A valid photoURL is required.");
@@ -402,10 +451,13 @@ export const updateUserProfile = onCall(async (request) => {
     authUpdateData.photoURL = photoURL;
   }
 
-  // 5. Commit all updates
+  // Commit all updates
   if (Object.keys(updateData).length === 0) {
     return { success: true, message: "No changes were made." };
   }
+  
+  // Add a timestamp for the update
+  updateData.updatedAt = FieldValue.serverTimestamp();
 
   await userRef.update(updateData);
 
