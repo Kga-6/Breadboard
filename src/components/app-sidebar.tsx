@@ -14,12 +14,14 @@ import {
   SidebarRail,
   SidebarHeader,
   useSidebar,
+  SidebarTrigger,
 } from "@/components/ui/sidebar"
 import { Home, Book, Users, BookOpen, Play } from "lucide-react"
 import { ProfileDropdownMenu } from "@/components/ProfileDropdownMenu"
 import Link from "next/link"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useRouter } from "next/navigation"
+import { useEffect } from "react"
 
 
 export function AppSidebar() {
@@ -28,7 +30,11 @@ export function AppSidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const isActive = (url: string) => pathname === url;
-  const { isMobile } = useSidebar()
+  const { state } = useSidebar()
+
+  useEffect(() => {
+    console.log(state)
+  }, [state])
 
   const items = [
     {
@@ -96,7 +102,12 @@ export function AppSidebar() {
 
       <SidebarFooter className="mb-2">
         {userData ? (
-          <ProfileDropdownMenu/>
+          <SidebarContent className="flex flex-col items-center justify-between">
+            <div className={`flex ${state === "collapsed" ? "flex-col gap-2" : "flex-row gap-2"} items-center justify-between w-full `}>
+              <ProfileDropdownMenu/>
+              <SidebarTrigger />
+            </div>
+          </SidebarContent>
         ) : (
           (<Skeleton className="h-[40px] w-full rounded-md" />)
         )}

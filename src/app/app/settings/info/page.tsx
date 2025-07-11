@@ -115,6 +115,12 @@ export default function Settings() {
       const file = e.target.files?.[0];
       if (!file) return;
 
+      // VALIDATION: Check if the file type starts with "image/"
+      if (!file.type.startsWith("image/")) {
+        setMessage({ type: 'error', text: 'Invalid file type. Please select an image.' });
+        return; // Stop the function here
+      }
+
       setMessage(null);
       setIsSubmitting(true);
       try {

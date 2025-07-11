@@ -7,7 +7,7 @@ import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import { formatChapterHTML } from '@/utils/formater';
 import { BibleRoom } from '@/components/BibleRoom';
 import { BibleInviteModal } from '@/components/BibleInviteModal';
-import { SidebarTrigger } from "@/components/ui/sidebar"
+import { SidebarTrigger, useSidebar } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
 import { BibleSharing } from "@/components/bibles_screen/BibleSharing";
 import BibleSolo from "@/components/bibles_screen/BibleSolo";
@@ -66,6 +66,7 @@ export default function Bible() {
   const {userData, setBibleRoomSharing, friends} = useAuth();
   const searchParams = useSearchParams();
   const [isInviteModalOpen, setInviteModalOpen] = useState(false);
+  const { isMobile } = useSidebar()
 
   const [language, setLanguage] = useState<string>("eng");
   const [bibleId, setBibleId] = useState<string>(searchParams.get('bibleId') || "de4e12af7f28f599-02");
@@ -160,7 +161,9 @@ export default function Bible() {
 
       <header className="flex h-[74px] shrink-0 items-center sticky top-0 bg-white dark:bg-gray-500 z-10  transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
         <div className="flex items-center gap-2 px-4">
-          <SidebarTrigger className="-ml-1" />
+          {isMobile && (
+            <SidebarTrigger className="-ml-1" hamburgerIcon={isMobile} />
+          )}
         </div>
 
         <div className="  flex items-center gap-4 px-4  w-full justify-center ">

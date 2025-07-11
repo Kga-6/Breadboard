@@ -1,4 +1,5 @@
 "use client";
+
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { ref, uploadBytes, getDownloadURL, } from "firebase/storage";
 import { updateProfile , GoogleAuthProvider, onAuthStateChanged, signInWithPopup, User, signInWithEmailAndPassword, createUserWithEmailAndPassword, onIdTokenChanged, sendEmailVerification, sendPasswordResetEmail  } from "firebase/auth";
@@ -18,6 +19,8 @@ import { httpsCallable } from "firebase/functions";
 import { useRouter, usePathname } from "next/navigation";
 import Cookies from "js-cookie";
 
+import { UserTypes } from "@/types";
+
 export function getAuthToken():string | undefined {
   return Cookies.get("firebaseIdToken");
 }
@@ -30,27 +33,27 @@ export function removeAuthToken(): void {
   return Cookies.remove("firebaseIdToken");
 }
 
-type UserType = {
-  uid?: string;
-  name: string | null;
-  email: string | null;
-  username: string | null;
-  usernameLower: string | null;
-  completed_onboarding: boolean;
-  isPro?: boolean;
-  profilePictureUrl: string | null;
-  lastSeen?: Timestamp;
-  online?: boolean;
-  dob: string;
-  dobChangeCount: number | null | undefined;
-  gender: string | null;
-  language: string | null;
-  bibleRoom: {
-    invited: string [],
-    sharing: boolean,
-  },
-  biblePersonalization: {}
-};
+// type UserType = {
+//   uid?: string;
+//   name: string | null;
+//   email: string | null;
+//   username: string | null;
+//   usernameLower: string | null;
+//   completed_onboarding: boolean;
+//   isPro?: boolean;
+//   profilePictureUrl: string | null;
+//   lastSeen?: Timestamp;
+//   online?: boolean;
+//   dob: string;
+//   dobChangeCount: number | null | undefined;
+//   gender: string | null;
+//   language: string | null;
+//   bibleRoom: {
+//     invited: string [],
+//     sharing: boolean,
+//   },
+//   biblePersonalization: {}
+// };
 
 type Friend = {
   id: string;
@@ -78,7 +81,7 @@ type Jam = {
 
 interface AuthContextType {
   currentUser: User | null;
-  userData: UserType | null;
+  userData: UserTypes | null;
   isAdmin: boolean;
   isPro: boolean;
   loading: boolean;
@@ -114,13 +117,14 @@ interface AuthContextType {
   updateBiblePersonalization: (personalization: Record<string, any>) => Promise<void>;
   sendVerificationEmail: () => Promise<void>;
   sendPasswordReset: (email: string) => Promise<void>;
+  checkUsernameAvailability: (username: string) => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | null >(null);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [userData, setUserData] = useState<UserType | null>(null);
+  const [userData, setUserData] = useState<UserTypes | null>(null);
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const [isPro, setIsPro] = useState<boolean>(false);
   const [loading, setLoading] = useState(true);
@@ -139,6 +143,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const callSetBibleRoomSharing = httpsCallable(functions, "setBibleRoomSharing");
   const callUpdateUserProfile = httpsCallable(functions, "updateUserProfile");
   const callCreateUserProfile = httpsCallable(functions, "createUserProfile");
+  const callCheckUsername = httpsCallable(functions, "checkUsername");
 
   const router = useRouter();
   const pathname = usePathname();
@@ -184,7 +189,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         const unsubUser = onSnapshot(userRef, (doc) => {
           if (doc.exists()) {
-            const data = doc.data() as UserType;
+            const data = doc.data() as UserTypes;
             setUserData(data);
             setIsPro(data.isPro || false);
           } else {
@@ -566,6 +571,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (!auth) throw new Error("Firebase auth not initialized");
     await sendPasswordResetEmail(auth, email);
   }
+  async function checkUsernameAvailability(username: string): Promise<boolean> {
+    try {
+      const result = await callCheckUsername({ username }) as { data: { isAvailable: boolean } };
+      return result.data.isAvailable;
+    } catch (error) {
+      // Log the error and re-throw it so the component can handle it
+      console.error("Error checking username availability:", error);
+      throw error;
+    }
+  }
   
   const contextValue: AuthContextType = {
     currentUser,
@@ -594,6 +609,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     updateBiblePersonalization,
     sendVerificationEmail,
     sendPasswordReset,
+    checkUsernameAvailability,
   };
 
   return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>;

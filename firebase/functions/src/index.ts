@@ -2,11 +2,12 @@ import { onCall, HttpsError, onRequest } from "firebase-functions/v2/https";
 import { onDocumentCreated } from 'firebase-functions/v2/firestore';
 import { beforeUserCreated, beforeUserSignedIn } from 'firebase-functions/v2/identity';
 import { WebhookHandler } from "@liveblocks/node";
-
+import { UserTypes } from "../../../src/types";
 import { initializeApp } from "firebase-admin/app";
 import { getFirestore, FieldValue, Firestore } from "firebase-admin/firestore";
 import { getStorage } from "firebase-admin/storage";
 import { getAuth } from "firebase-admin/auth";
+
 
 // Initialize Firebase Admin
 initializeApp();
@@ -16,42 +17,6 @@ const auth = getAuth();
 // Initialize the Webhook class with your secret key
 const webhookHandler = new WebhookHandler("whsec_6V/28Hyq6fp03z2Pzmf7Gn+kij2aBIzp");
 const liveblocksSecretKey = "sk_dev_nJvd18ul5Mlwc9kWZeYeB-5n5RjLAp0jD7FzQc2rOFpUjA1LdNjcEn0lBEN7BCBx";
-
-// Types for user data
-interface UserProfile {
-  uid: string;
-  email: string;
-  name: string;
-  username: string;
-  //displayName: string;
-  usernameLower: string;
-  profilePictureUrl: string | null;
-  isPro: boolean;
-  online: boolean;
-  onboarding: {
-    profilePicture: boolean;
-    username: boolean;
-  };
-  lastSeen: FirebaseFirestore.Timestamp;
-  bibleRoom: {
-    invited: string[];
-    sharing: boolean;
-  };
-  biblePersonalization:{
-    // "de4e12af7f28f599-02": {    // Bible ID
-    //   "REV": {                    // Book ID
-    //     "REV.1": {                // Chapter ID
-    //       "1": "bg-red-200",    // Verse '1' will be red
-    //       "5": "bg-yellow-100",   // Verse '5' will have a yellow background
-    //       "12": "bg-blue-200",   // Verse '12' will be blue
-    //     }
-    //   }
-    // }
-  }
-  createdAt: FirebaseFirestore.Timestamp;
-  updatedAt: FirebaseFirestore.Timestamp;
-  isVerified: boolean;
-}
 
 // Define admin/pro emails (consider moving to environment variables)
 const ADMIN_EMAILS = ["admin@example.com", "kguerrero0325@gmail.com"];
@@ -142,6 +107,14 @@ export const beforeUserSignedInTrigger = beforeUserSignedIn(async (event) => {
     return;
   }
 
+  const isAdmin = ADMIN_EMAILS.includes(user.email || "");
+  const isPro = isAdmin || PRO_EMAILS.includes(user.email || "");
+
+  await auth.setCustomUserClaims(user.uid, {
+    role: isAdmin ? "admin" : isPro ? "pro" : "user",
+    isPro: isPro,
+  });
+
   // Add any sign-in validation logic here
   console.log(`User ${user.uid} is signing in`);
   
@@ -208,48 +181,43 @@ export const createUserProfile = onCall(async (request) => {
     }
 
     const username = await generateUniqueUsername(userRecord.displayName || name || userRecord.email.split("@")[0], db);
-
-    const userProfile: UserProfile = {
+    
+    const newUserProfile: UserTypes = {
       uid: auth.uid,
-      email: userRecord.email || '',
       name: name || userRecord.displayName || "",
+      email: userRecord.email || '',
       username: username,
       usernameLower: username.toLowerCase(),
-      profilePictureUrl: null,
+      completed_onboarding: false,
       isPro: false,
-      online: true, // Set to true on creation
+      profilePictureUrl: userRecord.photoURL || null,
+      online: true,
+      dob: "",
+      isTesting: true,
+      dobChangeCount: 0,
+      gender: "",
+      language: "",
       onboarding: {
         profilePicture: false,
         username: false,
       },
-      lastSeen: FieldValue.serverTimestamp() as FirebaseFirestore.Timestamp,
       bibleRoom: {
         invited: [],
-        sharing: false
+        sharing: false,
       },
-      biblePersonalization:{
-        "de4e12af7f28f599-02": {    // Bible ID
-          "REV": {                    // Book ID
-            "REV.1": {                // Chapter ID
-              "1": "bg-red-200",    // Verse '1' will be red
-              "5": "bg-yellow-100",   // Verse '5' will have a yellow background
-              "12": "bg-blue-200",   // Verse '12' will be blue
-            }
-          }
-        }
-      },
+      biblePersonalization: {},
+      lastSeen: FieldValue.serverTimestamp() as FirebaseFirestore.Timestamp,
       createdAt: FieldValue.serverTimestamp() as FirebaseFirestore.Timestamp,
       updatedAt: FieldValue.serverTimestamp() as FirebaseFirestore.Timestamp,
-      isVerified: false,
-    };
+    }
 
     // This will now only run once
-    await userDocRef.set(userProfile);
+    await userDocRef.set(newUserProfile);
 
     return {
       success: true,
       message: 'Profile created successfully.',
-      user: userProfile,
+      user: newUserProfile,
     };
 
   } catch (error) {
@@ -261,61 +229,24 @@ export const createUserProfile = onCall(async (request) => {
   }
 });
 
-// When user signs up OLDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD BYEEEEEEEEEEEEEEE
-// export const onUserCreate = functions.auth.user().onCreate(async (user) => {
-//   if (!user?.email || !user?.uid) {
-//     console.error("Missing required user data:", {
-//       email: user?.email,
-//       uid: user?.uid,
-//     });
-//     return;
-//   }
+export const checkUsername = onCall(async (request) => {
+  const { username } = request.data;
 
-//   try {
-//     const isAdmin = ADMIN_EMAILS.includes(user.email);
-//     const isPro = isAdmin || PRO_EMAILS.includes(user.email);
+  // Basic validation
+  if (!username || typeof username !== 'string' || username.length < 3 || username.length > 25) {
+    throw new HttpsError("invalid-argument", "Username must be 3-25 characters.");
+  }
+  if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+      throw new HttpsError("invalid-argument", "Username can only contain letters, numbers, and underscores.");
+  }
 
-//     // Generate the unique username
-//     // This will now use the displayName if it's available, or "user" as a fallback.
-//     const username = await generateUniqueUsername(user.displayName || user?.email.split("@")[0], db);
-
-//     // Create user document with the new username and isPro flag
-//     await db.doc(`users/${user.uid}`).set({
-//       uid: user.uid,
-//       email: user.email,
-//       name: user.displayName || "Unknown", // Your existing fallback works perfectly
-//       username: username,
-//       usernameLower: username.toLowerCase(),
-//       profilePictureUrl: user.photoURL || null,
-//       isPro: isPro,
-//       online: false,
-//       completed_onboarding: false,
-//       lastSeen: FieldValue.serverTimestamp(),
-//       bibleRoom: {
-//         invited: [], // users uid
-//         sharing: false // does the user currently want anyone from invited to join in
-//       }
-//     });
-
-//     console.log(`User document created for ${user.email} with username: ${username} and isPro: ${isPro}`);
-
-//     // Set custom claims for admin and pro users
-//     if (isAdmin) {
-//       await auth.setCustomUserClaims(user.uid, {
-//         role: "admin",
-//         isPro: true,
-//       });
-//       console.log(`Admin custom claims set for ${user.email}`);
-//     } else if (isPro) {
-//       await auth.setCustomUserClaims(user.uid, {
-//         isPro: true,
-//       });
-//       console.log(`Pro custom claims set for ${user.email}`);
-//     }
-//   } catch (error) {
-//     console.error("Error in onUserCreate function:", error);
-//   }
-// });
+  const userSnapshot = await db.collection("users")
+    .where("usernameLower", "==", username.toLowerCase())
+    .get();
+  
+  // Return true if no documents were found (the username is available)
+  return { isAvailable: userSnapshot.empty };
+});
 
 // for my users
 export const updateUserProfile = onCall(async (request) => {
@@ -378,7 +309,6 @@ export const updateUserProfile = onCall(async (request) => {
         }
     }
     updateData.email = newEmail;
-    updateData.isVerified = false;
     authUpdateData.email = newEmail;
   }
 

@@ -1,8 +1,36 @@
 rules_version = '2';
+
 service firebase.storage {
+  // This rule matches your storage bucket
   match /b/{bucket}/o {
-    match /{allPaths=**} {
-      allow read, write: if true;
+
+    // Rules for profile pictures
+    // The path is broken down to capture the userId and the fileName from the upload path
+    match /profile-pictures/{userId}/{fileName} {
+
+      // READ: Allow anyone to read profile pictures.
+      // This is necessary so that user avatars can be displayed publicly in your app.
+      allow read: if true;
+
+      // WRITE (Create, Update, Delete):
+      // Allow a user to write to the profile picture path only if ALL of the following are true:
+      allow write: if
+        // 1. The user is authenticated.
+        request.auth != null &&
+        // 2. The user is trying to upload to their OWN folder (their UID must match the {userId} in the path).
+        request.auth.uid == userId &&
+        // 3. The file being uploaded is an image.
+        request.resource.contentType.matches('image/.*') &&
+        // 4. The file size is less than 5MB to prevent abuse.
+        request.resource.size < 5 * 1024 * 1024;
     }
+
+    // Optional: Default deny all other paths
+    // If you have other folders (e.g., for 'jams'), you would add match blocks for them here.
+    // This line is not strictly necessary if you follow a "default deny" approach,
+    // but it makes it explicit.
+    // match /{allOtherPaths=**} {
+    //   allow read, write: if false;
+    // }
   }
 }
