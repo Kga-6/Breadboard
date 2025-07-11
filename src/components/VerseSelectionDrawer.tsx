@@ -80,7 +80,7 @@ export default function VerseSelectionDrawer({
           <div className="flex flex-row gap-2">
 
             {friends.slice(0, 3).map((friend) => (
-              <Tooltip>
+              <Tooltip key={friend.id}>
                 <TooltipTrigger asChild>
                   <Avatar className="w-10 h-10 border-1 shadow-md">
                     <AvatarImage  src={friend.photoURL || "/default-avatar.jpg"} className="object-cover" />

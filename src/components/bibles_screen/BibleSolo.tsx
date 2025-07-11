@@ -141,7 +141,7 @@ export default function BibleSolo({
     }
 
     return `${bookLocalName} ${chapterNumber}:${parts.join(",")} ${bibleLocalName}`;
-  }, [selectedVerses, chapterData]);
+  }, [selectedVerses, chapterData, bookLocalName, bibleLocalName]);
 
   return (
     <div className="p-4 max-w-2xl mx-auto" onClick={handleVerseClick}>

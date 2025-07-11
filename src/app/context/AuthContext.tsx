@@ -167,7 +167,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setJams([]);
         removeAuthToken();
         setLoading(false);
-        router.replace('/');
+        //router.replace('/');
       } else {
         setLoading(true);
         const token = await firebaseUser.getIdToken();
@@ -332,7 +332,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     }
     console.log(loading)
-  }, [loading]);
+  }, [loading, pathname, router]);
 
   const loginGoogle = async (): Promise<void> => {
     if (!auth) throw new Error("Firebase auth not initialized");
