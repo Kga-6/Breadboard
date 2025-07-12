@@ -1,8 +1,20 @@
-import BibleView from "@/components/BibleView";
+import BibleView from "./_components/bible";
+import { getCache, setCache } from "@/utils/appcache";
+import { BibleTypes, BookTypes, ChapterRefTypes, ChapterTypes } from "@/types";
 
-async function fetchBibleData(path: string) {
+interface CacheEntry {
+  cachedAt: number;
+  data: BibleTypes | BookTypes | ChapterRefTypes | ChapterTypes;
+}
+
+async function fetchBibleData(path: string, cacheKey?: string) {
   const API_KEY = process.env.BIBLE_API_KEY;
   if (!API_KEY) throw new Error("Missing BIBLE_API_KEY");
+
+  if (cacheKey) {
+    const cachedData = await getCache(cacheKey) as CacheEntry;
+    if (cachedData) return cachedData.data;
+  }
 
   const url = `https://api.scripture.api.bible/v1/${path}`;
   const response = await fetch(url, {
@@ -15,7 +27,13 @@ async function fetchBibleData(path: string) {
     console.error(`Failed to fetch: ${url}`);
     return null; // Handle errors gracefully
   }
-  const data = await response.json();
+
+  const data = (await response.json());
+
+  if (cacheKey) {
+    setCache(cacheKey, data);
+  }
+
   return data.data;
 }
 
@@ -36,9 +54,9 @@ export default async function BiblePage({ params, searchParams }: { params: Prom
     initialChapterContent
   ] = await Promise.all([
     fetchBibleData('bibles?ids=de4e12af7f28f599-02'),
-    fetchBibleData(`bibles/${bibleId}/books`),
-    fetchBibleData(`bibles/${bibleId}/books/${bookId}/chapters`),
-    fetchBibleData(`bibles/${bibleId}/chapters/${chapterId}`)
+    fetchBibleData(`bibles/${bibleId}/books`, `bible_${bibleId}_books`),
+    fetchBibleData(`bibles/${bibleId}/books/${bookId}/chapters`, `bible_${bibleId}_books_${bookId}_chapters`),
+    fetchBibleData(`bibles/${bibleId}/chapters/${chapterId}`, `bible_${bibleId}_chapters_${chapterId}`)
   ]);
 
   // Pass the server-fetched data as props to the Client Component

@@ -1,12 +1,15 @@
 // Define Liveblocks types for your application
 // https://liveblocks.io/docs/api-reference/liveblocks-react#Typing-your-data
+
+
 declare global {
   interface Liveblocks {
     
     // Each user's Presence, for useMyPresence, useOthers, etc.
     Presence: {
       // Example, real-time cursor coordinates
-      // cursor: { x: number; y: number };
+      cursor: { x: number; y: number };
+      chapterId: string;
     };
 
     // The Storage tree for the room, for useMutation, useStorage, etc.

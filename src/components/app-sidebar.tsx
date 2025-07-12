@@ -37,11 +37,11 @@ export function AppSidebar() {
   }, [state])
 
   const items = [
-    {
-      title: "Home",
-      url: "/app/home",
-      icon: Home,
-    },
+    // {
+    //   title: "Home",
+    //   url: "/app/home",
+    //   icon: Home,
+    // },
     {
       title: "Bible",
       url: `/app/bible/session/${userData?.uid}`,
@@ -57,11 +57,11 @@ export function AppSidebar() {
       url: "/app/friends",
       icon: Users,
     },
-    {
-      title: "Jams",
-      url: "/app/jam",
-      icon: BookOpen,
-    },
+    // {
+    //   title: "Jams",
+    //   url: "/app/jam",
+    //   icon: BookOpen,
+    // },
   ]
 
   return (
@@ -73,7 +73,11 @@ export function AppSidebar() {
           <SidebarMenuItem>
             <SidebarMenuButton className="hover:bg-transparent" disabled={true} asChild>
               <div className="flex items-center px-2 ">
-                <Link href="/" className="text-2xl font-bold">Breadboard</Link>
+                {state === "collapsed" ? (
+                  <Link href="/" className="text-2xl font-bold">B</Link>
+                ) : (
+                  <Link href="/" className="text-2xl font-bold">Breadboard</Link>
+                )}
               </div>
             </SidebarMenuButton>
           </SidebarMenuItem>

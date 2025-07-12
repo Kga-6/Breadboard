@@ -1,35 +1,9 @@
 import { formatChapterHTML } from "@/utils/formater";
-import { UserTypes } from "@/types";
 import { useAuth } from "@/app/context/AuthContext";
 import { useState, useMemo } from "react";
 import VerseSelectionDrawer from "@/components/VerseSelectionDrawer";
 
-interface ChapterRef {
-  id: string;
-  bookId: string;
-  reference: string;
-}
-
-interface Chapter {
-  id: string;
-  bibleId: string;
-  bookId: string;
-  reference: string;
-  content: string;
-  verseCount: number;
-  previous?: ChapterRef;
-  next?: ChapterRef;
-  copyright?: string;
-}
-
-type Friend = {
-  id: string;
-  name: string;
-  username: string;
-  online: boolean;
-  photoURL: string | null;
-};
-
+import { UserTypes, ChapterTypes, FriendTypes } from "@/types";
 
 export default function BibleSolo({
   chapterData,
@@ -38,11 +12,11 @@ export default function BibleSolo({
   bookLocalName,
   friends,
 }: {
-  chapterData: Chapter;
+  chapterData: ChapterTypes;
   userData: UserTypes;
   bibleLocalName: string;
   bookLocalName: string;
-  friends: Friend[];
+  friends: FriendTypes[];
 }) {
   const { updateBiblePersonalization } = useAuth();
   const [selectedVerses, setSelectedVerses] = useState<number[]>([]);

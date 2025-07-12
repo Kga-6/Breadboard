@@ -1,10 +1,9 @@
 "use client"
 
 import { useAuth } from "@/app/context/AuthContext";
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
-import { useParams, useSearchParams, useRouter } from 'next/navigation';
-import { formatChapterHTML } from '@/utils/formater';
+import { useRouter } from 'next/navigation';
 import { BibleRoom } from '@/components/BibleRoom';
 import { BibleInviteModal } from '@/components/BibleInviteModal';
 import { SidebarTrigger, useSidebar } from "@/components/ui/sidebar"
@@ -20,9 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { ChevronLeftIcon, ChevronRightIcon,LogOutIcon, UserRoundPlusIcon, SettingsIcon, BotIcon } from "lucide-react";
-
-const allowed_bibles_string = "de4e12af7f28f599-02"//,06125adad2d5898a-01,9879dbb7cfe39e4d-01";
+import { ChevronLeftIcon, ChevronRightIcon,LogOutIcon, UserRoundPlusIcon, SettingsIcon, BotIcon, Volume2 } from "lucide-react";
 
 export default function BibleView({
   uid,
@@ -50,16 +47,11 @@ export default function BibleView({
   const { isMobile } = useSidebar()
 
   const [language, setLanguage] = useState<string>("eng");
-  const [bibleId, setBibleId] = useState<string>(initialBibleId);
-  const [bibles, setBibles] = useState<BibleTypes[]>(initialBibles);
-  const [bookId, setBookId] = useState<string>(initialBookId);
-  const [books, setBooks] = useState<BookTypes[]>(initialBooks);
-  const [chapterId, setChapterId] = useState<string>(initialChapterId);
-  const [chapters, setChapters] = useState<ChapterRefTypes[]>(initialChapters);
-  const [chapter, setChapter] = useState<ChapterTypes | null>(initialChapter);
 
-  const [bibleLocalName, setBibleLocalName] = useState<string>("");
-  const [bookLocalName, setBookLocalName] = useState<string>("");
+  const [bibleLocalName, setBibleLocalName] = useState<string>(initialBibles.find(b => b.id === initialBibleId)?.abbreviationLocal || "");
+  const [bookLocalName, setBookLocalName] = useState<string>(initialBooks.find(b => b.id === initialBookId)?.name || "");
+
+  console.log(bibleLocalName, bookLocalName)
 
   const handleToggleSharing = async (value:boolean) => {
     try {
@@ -98,15 +90,18 @@ export default function BibleView({
       />
 
       <header className="flex h-[74px] shrink-0 items-center sticky top-0 bg-white dark:bg-gray-500 z-10  transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
-        <div className="flex items-center gap-2 px-4">
-          {isMobile && (
-            <SidebarTrigger className="-ml-1" hamburgerIcon={isMobile} />
-          )}
-        </div>
+        {isMobile && (
+          <div className="flex items-center gap-2 px-4">
+            {isMobile && (
+              <SidebarTrigger className="-ml-1" hamburgerIcon={isMobile} />
+            )}
+          </div>
+        )}
+        
 
-        <div className="flex items-center gap-4 px-4 w-full justify-center">
+        <div className="flex items-center gap-2 px-4 w-full justify-start">
           {/* Selects now use the new handler and render directly from props */}
-          <Select onValueChange={(value) => handleSelectionChange('bibleId', value)} defaultValue={initialBibleId}>
+          {/* <Select onValueChange={(value) => handleSelectionChange('bibleId', value)} defaultValue={initialBibleId}>
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Version" />
             </SelectTrigger>
@@ -115,13 +110,13 @@ export default function BibleView({
                 <SelectItem key={bible.id} value={bible.id}>{bible.nameLocal}</SelectItem>
               ))}
             </SelectContent>
-          </Select>
+          </Select> */}
 
           <Select onValueChange={(value) => handleSelectionChange('bookId', value)} defaultValue={initialBookId}>
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger>
               <SelectValue placeholder="Book" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="max-h-[400px] overflow-y-auto">
               {initialBooks.map((book) => (
                 <SelectItem key={book.id} value={book.id}>{book.name}</SelectItem>
               ))}
@@ -130,12 +125,12 @@ export default function BibleView({
 
           {initialChapters.length > 0 && (
             <Select onValueChange={(value) => handleSelectionChange('chapterId', value)} defaultValue={initialChapterId}>
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger>
                 <SelectValue placeholder="Chapter" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="max-h-[400px] overflow-y-auto">
                 {initialChapters.map((chapter) => (
-                  <SelectItem key={chapter.id} value={chapter.id}>{chapter.reference}</SelectItem>
+                  <SelectItem key={chapter.id} value={chapter.id}>{chapter.number}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -146,16 +141,19 @@ export default function BibleView({
         {userData && userData.uid == uid && (
           <div className="flex items-center ">
             <div className="mr-2">
-              <Button variant="outline" onClick={() => setInviteModalOpen(true)}><UserRoundPlusIcon className="w-4 h-4" /></Button>
+              <Button className="rounded-full h-10 w-10" variant="outline" onClick={() => setInviteModalOpen(true)}><UserRoundPlusIcon className="w-4 h-4" /></Button>
             </div>
             <div className="mr-2">
-              <Button variant="outline" onClick={() => console.log("Settings")}><SettingsIcon className="w-4 h-4" /></Button>
+              <Button className="rounded-full h-10 w-10" variant="outline" onClick={() => console.log("Settings")}><SettingsIcon className="w-4 h-4" /></Button>
             </div>
 
           </div>
         )}
         <div className="mr-2">
-            <Button variant="outline" onClick={() => console.log("AI Chat")}><BotIcon className="w-4 h-4" /></Button>
+            <Button className="rounded-full h-10 w-10" variant="outline" onClick={() => console.log("AI Chat")}><BotIcon className="w-4 h-4" /></Button>
+        </div>
+        <div className="mr-2">
+            <Button className="rounded-full h-10 w-10" variant="outline" onClick={() => console.log("AI Chat")}><Volume2 className="w-4 h-4" /></Button>
         </div>
         {userData && userData.uid == uid && userData.bibleRoom.sharing && (
           <div className="mr-2">
@@ -180,15 +178,17 @@ export default function BibleView({
         <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-4 bg-white p-2 rounded-full shadow-md">
           <button
             className=" bg-white/70 p-2 rounded-full hover:bg-gray-200 disabled:opacity-20"
-            disabled={!chapter || !chapter.previous}
+            disabled={!initialChapter || !initialChapter.previous}
             onClick={() => goToChapter(initialChapter?.previous)}
           >
             <ChevronLeftIcon className="w-8 h-8" />
           </button>
 
+          {/* <span className="text-sm text-gray-500">{initialChapter?.number}</span> */}
+
           <button
             className=" bg-white/70  p-2 rounded-full hover:bg-gray-200 disabled:opacity-20"
-            disabled={!chapter || !chapter.next}
+            disabled={!initialChapter || !initialChapter.next}
             onClick={() => goToChapter(initialChapter?.next)}
           >
             <ChevronRightIcon className="w-8 h-8" />
@@ -200,7 +200,7 @@ export default function BibleView({
           {initialChapter && userData ? (
              (userData.bibleRoom.sharing && userData.uid === uid) || (userData && uid !== userData.uid) ? (
               <BibleRoom roomId={uid}>
-                <BibleSharing chapterData={initialChapter} userData={userData}/>
+                <BibleSharing chapterData={initialChapter} userData={userData} bibleLocalName={bibleLocalName} bookLocalName={bookLocalName} friends={friends}/>
               </BibleRoom>
             ) : (
               <BibleSolo chapterData={initialChapter} userData={userData} friends={friends} bibleLocalName={bibleLocalName} bookLocalName={bookLocalName}/>

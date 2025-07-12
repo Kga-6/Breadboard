@@ -67,7 +67,10 @@ export function BibleRoom({ children, roomId }: RoomProps ) {
       }}
       
     >
-      <RoomProvider id={`bible:${roomId}`}>
+      <RoomProvider 
+        id={`bible:${roomId}`} 
+        initialPresence={{ cursor: { x: 0, y: 0 }, chapterId: "" }} 
+      >
         <ClientSideSuspense fallback={<div>Loading…</div>}>
           {children}
         </ClientSideSuspense>
