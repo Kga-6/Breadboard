@@ -34,7 +34,7 @@ export default function BibleView({
   uid: string;
   initialBibles: BibleTypes[];
   initialBooks: BookTypes[];
-  initialChapters: ChapterRefTypes[];
+  initialChapters: ChapterTypes[];
   initialChapter: ChapterTypes;
   initialBibleId: string;
   initialBookId: string;

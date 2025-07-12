@@ -311,3 +311,30 @@ Issues? Report them at https://github.com/firebase/firebase-tools/issues and att
 [debug] [2025-07-12T16:23:46.015Z] Finishing up request with event=finish {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-onUserCreated"},"extension":{},"message":"Finishing up request with event=finish"}}
 [debug] [2025-07-12T16:23:46.015Z] Finishing up request with event=close {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-onUserCreated"},"extension":{},"message":"Finishing up request with event=close"}}
 [debug] [2025-07-12T16:23:46.015Z] [work-queue] {"queuedWork":[],"queueLength":0,"runningWork":[],"workRunningCount":0}
+[debug] [2025-07-12T17:23:47.035Z] [worker-us-central1-onUserCreated-5214b379-8bb7-41f9-9962-359e2e3a7b8f]: exited {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-onUserCreated"},"extension":{},"message":"[worker-us-central1-onUserCreated-5214b379-8bb7-41f9-9962-359e2e3a7b8f]: exited"}}
+[debug] [2025-07-12T17:23:47.036Z] [worker-us-central1-onUserCreated-5214b379-8bb7-41f9-9962-359e2e3a7b8f]: FINISHED {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-onUserCreated"},"extension":{},"message":"[worker-us-central1-onUserCreated-5214b379-8bb7-41f9-9962-359e2e3a7b8f]: FINISHED"}}
+[debug] [2025-07-12T17:23:47.054Z] [worker-us-central1-createUserProfile-1c303e75-6dce-4db4-9013-9ece4dcfc8bf]: exited {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-createUserProfile"},"extension":{},"message":"[worker-us-central1-createUserProfile-1c303e75-6dce-4db4-9013-9ece4dcfc8bf]: exited"}}
+[debug] [2025-07-12T17:23:47.054Z] [worker-us-central1-createUserProfile-1c303e75-6dce-4db4-9013-9ece4dcfc8bf]: FINISHED {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-createUserProfile"},"extension":{},"message":"[worker-us-central1-createUserProfile-1c303e75-6dce-4db4-9013-9ece4dcfc8bf]: FINISHED"}}
+[debug] [2025-07-12T17:23:47.071Z] [worker-us-central1-beforeUserSignedInTrigger-26b1230e-a816-421c-a02a-a4d6c57ad1b8]: exited {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-beforeUserSignedInTrigger"},"extension":{},"message":"[worker-us-central1-beforeUserSignedInTrigger-26b1230e-a816-421c-a02a-a4d6c57ad1b8]: exited"}}
+[debug] [2025-07-12T17:23:47.071Z] [worker-us-central1-beforeUserSignedInTrigger-26b1230e-a816-421c-a02a-a4d6c57ad1b8]: FINISHED {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-beforeUserSignedInTrigger"},"extension":{},"message":"[worker-us-central1-beforeUserSignedInTrigger-26b1230e-a816-421c-a02a-a4d6c57ad1b8]: FINISHED"}}
+[debug] [2025-07-12T17:23:47.088Z] [worker-us-central1-beforeUserCreatedTrigger-0663f634-9106-440d-af86-322975238a41]: exited {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-beforeUserCreatedTrigger"},"extension":{},"message":"[worker-us-central1-beforeUserCreatedTrigger-0663f634-9106-440d-af86-322975238a41]: exited"}}
+[debug] [2025-07-12T17:23:47.088Z] [worker-us-central1-beforeUserCreatedTrigger-0663f634-9106-440d-af86-322975238a41]: FINISHED {"metadata":{"emulator":{"name":"functions"},"function":{"name":"us-central1-beforeUserCreatedTrigger"},"extension":{},"message":"[worker-us-central1-beforeUserCreatedTrigger-0663f634-9106-440d-af86-322975238a41]: FINISHED"}}
+[debug] [2025-07-12T17:23:47.116Z] Received signal SIGHUP 1
+[info]  
+[info] i  emulators: Received SIGHUP for the first time. Starting a clean shutdown. 
+[info] i  emulators: Please wait for a clean shutdown or send the SIGHUP signal again to stop right now. 
+[info] i  emulators: Shutting down emulators. {"metadata":{"emulator":{"name":"hub"},"message":"Shutting down emulators."}}
+[info] i  ui: Stopping Emulator UI {"metadata":{"emulator":{"name":"ui"},"message":"Stopping Emulator UI"}}
+[info] i  extensions: Stopping Extensions Emulator {"metadata":{"emulator":{"name":"extensions"},"message":"Stopping Extensions Emulator"}}
+[debug] [2025-07-12T17:23:47.119Z] [Extensions] Stopping Extensions emulator, this is a noop.
+[info] i  functions: Stopping Functions Emulator {"metadata":{"emulator":{"name":"functions"},"message":"Stopping Functions Emulator"}}
+[info] i  firestore: Stopping Firestore Emulator {"metadata":{"emulator":{"name":"firestore"},"message":"Stopping Firestore Emulator"}}
+[warn] !  Firestore Emulator has exited upon receiving signal: SIGINT 
+[info] i  auth: Stopping Authentication Emulator {"metadata":{"emulator":{"name":"auth"},"message":"Stopping Authentication Emulator"}}
+[info] i  storage: Stopping Storage Emulator {"metadata":{"emulator":{"name":"storage"},"message":"Stopping Storage Emulator"}}
+[debug] [2025-07-12T17:23:47.127Z] Stopping rules runtime. {"metadata":{"emulator":{"name":"storage"},"message":"Stopping rules runtime."}}
+[info] i  eventarc: Stopping Eventarc Emulator {"metadata":{"emulator":{"name":"eventarc"},"message":"Stopping Eventarc Emulator"}}
+[info] i  tasks: Stopping Cloud Tasks Emulator {"metadata":{"emulator":{"name":"tasks"},"message":"Stopping Cloud Tasks Emulator"}}
+[info] i  hub: Stopping emulator hub {"metadata":{"emulator":{"name":"hub"},"message":"Stopping emulator hub"}}
+[info] i  logging: Stopping Logging Emulator {"metadata":{"emulator":{"name":"logging"},"message":"Stopping Logging Emulator"}}
+[debug] [2025-07-12T17:23:47.135Z] Could not find VSCode notification endpoint: FetchError: request to http://localhost:40001/vscode/notify failed, reason: . If you are not running the Firebase Data Connect VSCode extension, this is expected and not an issue.

@@ -52,7 +52,7 @@ export function Room({ children, roomId }: RoomProps ) {
       }}
       
     >
-      <RoomProvider id={`jam:${roomId}`}>
+      <RoomProvider id={`jam:${roomId}`} initialPresence={{ cursor: { x: 0, y: 0 }, chapterId: "" }}>
         <ClientSideSuspense fallback={<div>Loading…</div>}>
           {children}
         </ClientSideSuspense>
