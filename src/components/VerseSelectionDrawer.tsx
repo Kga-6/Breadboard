@@ -28,6 +28,7 @@ export default function VerseSelectionDrawer({
   formattedReference,
   friends,
 }: VerseSelectionMenuProps) {
+  
   return(
 
     <div className="fixed flex-col bottom-0 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 bg-white p-8 rounded-t-lg shadow-2xl w-[450px]">
@@ -44,13 +45,18 @@ export default function VerseSelectionDrawer({
             <Highlighter className="w-6 h-6" />
             <p className="text-md font-medium">Highlight</p>
           </div>
-          <div className="flex flex-row gap-2">
+          <div className="flex flex-row gap-2 overflow-hidden">
             {isHighlighted && (
               <Button onClick={onRemoveHighlight} variant="outline" className="bg-gray-200 w-10 h-10 rounded-full"><CircleX className="w-[15px] h-[15px] " /></Button>
             )}
-            <button onClick={() => onHighlight("bg-red-200")} className="bg-red-200 w-10 h-10 rounded-full hover:default:"/>
+            <button onClick={() => onHighlight("bg-yellow-200")} className="bg-yellow-200 w-10 h-10 rounded-full hover:default:"/>
             <button onClick={() => onHighlight("bg-green-200")} className="bg-green-200 w-10 h-10 rounded-full"/>
-            <button onClick={() => onHighlight("bg-blue-200")} className="bg-blue-200 w-10 h-10 rounded-full"/>
+            <button onClick={() => onHighlight("bg-pink-200")} className="bg-pink-200 w-10 h-10 rounded-full"/>
+            {/* <button onClick={() => onHighlight("bg-blue-200")} className="bg-blue-200 w-10 h-10 rounded-full"/>
+            <button onClick={() => onHighlight("bg-orange-200")} className="bg-orange-200 w-10 h-10 rounded-full"/>
+            <button onClick={() => onHighlight("bg-purple-200")} className="bg-purple-200 w-10 h-10 rounded-full"/>
+            <button onClick={() => onHighlight("bg-red-200")} className="bg-red-200 w-10 h-10 rounded-full"/>
+            <button onClick={() => onHighlight("bg-gray-200")} className="bg-gray-200 w-10 h-10 rounded-full"/> */}
           </div>
         </div>
         <div className="flex flex-row justify-between items-center py-4 border-b">

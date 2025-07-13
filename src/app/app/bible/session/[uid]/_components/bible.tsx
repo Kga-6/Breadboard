@@ -19,7 +19,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { ChevronLeftIcon, ChevronRightIcon,LogOutIcon, UserRoundPlusIcon, SettingsIcon, BotIcon, Volume2 } from "lucide-react";
+import { Label } from "@/components/ui/label"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
+import { Toggle } from "@/components/ui/toggle"
+import { ChevronLeftIcon, ChevronRightIcon,LogOutIcon, UserRoundPlusIcon, SettingsIcon, BotIcon, Volume2, CaseUpper, CaseLower, CaseSensitive, Check } from "lucide-react";
 
 export default function BibleView({
   uid,
@@ -42,7 +50,7 @@ export default function BibleView({
 }) {
   const router = useRouter();
 
-  const {userData, setBibleRoomSharing, friends} = useAuth();
+  const {userData, setBibleRoomSharing, friends, updateReaderSettings} = useAuth();
   const [isInviteModalOpen, setInviteModalOpen] = useState(false);
   const { isMobile } = useSidebar()
 
@@ -51,7 +59,7 @@ export default function BibleView({
   const [bibleLocalName, setBibleLocalName] = useState<string>(initialBibles.find(b => b.id === initialBibleId)?.abbreviationLocal || "");
   const [bookLocalName, setBookLocalName] = useState<string>(initialBooks.find(b => b.id === initialBookId)?.name || "");
 
-  console.log(bibleLocalName, bookLocalName)
+  const [isReaderSettingsOpen, setIsReaderSettingsOpen] = useState(false);
 
   const handleToggleSharing = async (value:boolean) => {
     try {
@@ -60,6 +68,14 @@ export default function BibleView({
       console.error("Failed to update sharing status:", error);
     }
   };
+
+  const handleReaderSettingsChange = async (type: 'fontSize' | 'font' | 'numbersAndTitles', value: string) => {
+    const newSettings = {
+      ...userData?.readerSettings,
+      [type]: value,
+    };
+    await updateReaderSettings(newSettings as { fontSize: number; font: string; numbersAndTitles: boolean });
+  }
 
   const handleSelectionChange = (type: 'bibleId' | 'bookId' | 'chapterId', value: string) => {
     const params = new URLSearchParams({
@@ -82,14 +98,14 @@ export default function BibleView({
 };
 
   return (
-    <>
+    <div className="dark:bg-[#1a1a1e]">
       {/* Conditionally render the modal */}
       <BibleInviteModal 
         isOpen={isInviteModalOpen} 
         onClose={() => setInviteModalOpen(false)} 
       />
 
-      <header className="flex h-[74px] shrink-0 items-center sticky top-0 bg-white dark:bg-gray-500 z-10  transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
+      <header className="flex h-[74px] py-8 shrink-0 items-center sticky top-0 bg-white dark:bg-[#1a1a1e] z-10  transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 ">
         {isMobile && (
           <div className="flex items-center gap-2 px-4">
             {isMobile && (
@@ -100,6 +116,13 @@ export default function BibleView({
         
 
         <div className="flex items-center gap-2 px-4 w-full justify-start">
+          {userData && userData.uid == uid && userData.bibleRoom.sharing && (
+            <div className="mr-2">
+              <Button variant="destructive" onClick={() => {
+                handleToggleSharing(false);
+              }}>End Session</Button>
+            </div>
+          )}
           {/* Selects now use the new handler and render directly from props */}
           {/* <Select onValueChange={(value) => handleSelectionChange('bibleId', value)} defaultValue={initialBibleId}>
             <SelectTrigger className="w-[180px]">
@@ -135,6 +158,49 @@ export default function BibleView({
               </SelectContent>
             </Select>
           )}
+
+          <Popover>
+            <PopoverTrigger asChild>
+              <div>
+                  <Button className="rounded-full h-10 w-10" variant="outline"><CaseUpper /></Button>
+              </div>
+            </PopoverTrigger>
+            <PopoverContent className="w-80 mt-4">
+              <div className="grid gap-4">
+                <div className="space-y-2">
+                  <h4 className="leading-none font-medium">Reader Settings</h4>
+                </div>
+
+                <ToggleGroup type="single" className="w-full"  onValueChange={(value) => handleReaderSettingsChange('fontSize', value)}>
+                  <ToggleGroupItem value="18" className="w-full h-[50px] border-1 border-r-0 border-gray-200">
+                    <CaseLower className="h-10 w-10" />
+                  </ToggleGroupItem>
+                  <ToggleGroupItem value="26" className="w-full h-[50px] border-1 border-r-0 border-gray-200">
+                    <CaseSensitive className="h-10 w-10" />
+                  </ToggleGroupItem>
+                  <ToggleGroupItem value="30" className="w-full h-[50px] border-1 border-gray-200">
+                    <CaseUpper className="h-10 w-10" />
+                  </ToggleGroupItem>
+                </ToggleGroup>
+
+                <ToggleGroup type="single" className="w-full"  onValueChange={(value) => handleReaderSettingsChange('font', value)}>
+                  <ToggleGroupItem value="Inter" aria-label="Toggle bold" className="w-full h-[50px] border-1 border-r-0 border-gray-200">
+                    Inter
+                  </ToggleGroupItem>
+                  <ToggleGroupItem value="Source Serif Pro" aria-label="Toggle italic" className="w-full h-[50px] border-1  border-gray-200">
+                    Source Serif Pro
+                  </ToggleGroupItem>
+                </ToggleGroup>
+
+
+              </div>
+            </PopoverContent>
+          </Popover>
+
+          <div className="mr-2">
+            <Button className="rounded-full h-10 w-10" variant="outline" onClick={() => console.log("Text to Speech")}><Volume2 className="w-4 h-4" /></Button>
+          </div>
+          
         </div>
 
 
@@ -143,25 +209,21 @@ export default function BibleView({
             <div className="mr-2">
               <Button className="rounded-full h-10 w-10" variant="outline" onClick={() => setInviteModalOpen(true)}><UserRoundPlusIcon className="w-4 h-4" /></Button>
             </div>
-            <div className="mr-2">
-              <Button className="rounded-full h-10 w-10" variant="outline" onClick={() => console.log("Settings")}><SettingsIcon className="w-4 h-4" /></Button>
-            </div>
-
           </div>
         )}
+        {userData && userData.uid == uid && userData.bibleRoom.sharing && (
+          <div className="mr-2">
+            <Button className="rounded-full h-10 w-10" variant="outline" onClick={() => console.log("Settings")}><SettingsIcon className="w-4 h-4" /></Button>
+          </div>
+        )}
+        
+        
+
         <div className="mr-2">
             <Button className="rounded-full h-10 w-10" variant="outline" onClick={() => console.log("AI Chat")}><BotIcon className="w-4 h-4" /></Button>
         </div>
-        <div className="mr-2">
-            <Button className="rounded-full h-10 w-10" variant="outline" onClick={() => console.log("AI Chat")}><Volume2 className="w-4 h-4" /></Button>
-        </div>
-        {userData && userData.uid == uid && userData.bibleRoom.sharing && (
-          <div className="mr-2">
-            <Button variant="destructive" onClick={() => {
-              handleToggleSharing(false);
-            }}>End Session</Button>
-          </div>
-        )}
+        
+        
         {userData && userData.uid != uid && (
           <div className="mr-2">
             <Button variant="destructive" onClick={() => {
@@ -175,7 +237,7 @@ export default function BibleView({
       <div className="flex flex-row items-center justify-center">
 
 
-        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-4 bg-white p-2 rounded-full shadow-md">
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-4 bg-white p-2 rounded-full shadow-md dark:bg-black">
           <button
             className=" bg-white/70 p-2 rounded-full hover:bg-gray-200 disabled:opacity-20"
             disabled={!initialChapter || !initialChapter.previous}
@@ -210,6 +272,6 @@ export default function BibleView({
           )}
         </main>
       </div>
-    </>
+    </div>
   );
 }

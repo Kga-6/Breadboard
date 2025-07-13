@@ -8,7 +8,9 @@ function GameCard({ game }: { game: { name: string; image: string } }) {
         {/* The image now has transition and group-hover:scale properties */}
         <Image 
           src={game.image} 
-          alt={game.name} 
+          alt={game.name}
+          width={100}
+          height={100}
           className="w-full h-full object-cover transition-transform duration-300 ease-in-out group-hover:scale-110" 
         />
   

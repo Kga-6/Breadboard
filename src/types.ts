@@ -26,7 +26,12 @@ export interface UserTypes {
     invited: string [],
     sharing: boolean,
   },
-  biblePersonalization: Record<string, Record<string, Record<string, Record<string, string>>>>;
+  biblePersonalization: Record<string, Record<string, Record<string, Record<string, string>>>>; // User highlights, notes
+  readerSettings: {
+    font: string;
+    fontSize: number;
+    numbersAndTitles: boolean;
+  };
   lastSeen?: FirebaseFirestore.Timestamp;
   createdAt: FirebaseFirestore.Timestamp;
   updatedAt: FirebaseFirestore.Timestamp;

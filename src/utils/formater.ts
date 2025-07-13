@@ -27,7 +27,7 @@ const selectedVerses: Record<string, Record<string, Record<string, number[]>>> =
   }
 };
 
-export function formatChapterHTML(chapterData: Chapter, userData: UserTypes, selectedVerseNumbers: number[] = []): string {
+export function formatChapterHTML(chapterData: Chapter, userData: UserTypes, selectedVerseNumbers: number[] = [], isSharing: boolean): string {
   const rawHTML = chapterData.content;
   if (!rawHTML) return '';
 
@@ -35,6 +35,10 @@ export function formatChapterHTML(chapterData: Chapter, userData: UserTypes, sel
   const doc = parser.parseFromString(rawHTML, 'text/html');
 
   const formattedParagraphs: string[] = [];
+
+  const font = !isSharing ? userData.readerSettings?.font : 'Inter';
+  const fontSize = !isSharing ? userData.readerSettings?.fontSize : 18;
+  const numbersAndTitles = !isSharing ? userData.readerSettings?.numbersAndTitles : false;
 
   // Helper function to process and style individual nodes (words, special text)
   // This function is stateless and can be defined once.
@@ -88,7 +92,7 @@ export function formatChapterHTML(chapterData: Chapter, userData: UserTypes, sel
           data-verse="${chapterData.bibleId}:${chapterData.bookId}:${chapterData.id}:${currentVerseNumber}" 
           class="ChapterContent_verse ${highlightClass} ${selectedClass}"
         >
-          <span class="chapterContent_label text-gray-500 text-sm">${displayNumber}</span>
+          <span class="chapterContent_label text-gray-500 text-sm">${numbersAndTitles ? displayNumber : ''}</span>
           <span class="chapterContent_content leading-8">${currentVerseContent.trim()}</span>
         </span>`;
       verses.push(verseHTML);
@@ -114,9 +118,14 @@ export function formatChapterHTML(chapterData: Chapter, userData: UserTypes, sel
 
     // If the paragraph contained any verses, wrap them in a div and add to the final output array
     if (verses.length > 0) {
-      const paragraphHTML = `<div class="ChapterContent_p ">\n${verses.join('\n')}\n</div>`;
-      formattedParagraphs.push(paragraphHTML);
-    }
+      const paragraphHTML = `<div 
+        class="ChapterContent_p " 
+        style="font-size: ${fontSize}px; font-family: ${font}"
+      >
+        \n${verses.join('\n')}\n
+      </div>`;
+      formattedParagraphs.push(paragraphHTML);
+    }
   });
 
   // Join all the completed paragraph divs into the final string

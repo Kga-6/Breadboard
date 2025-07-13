@@ -79,7 +79,7 @@ export default function Friends() {
   console.log(sentRequests)
 
   return (
-    <div className="p-4 w-[950px] mx-auto dark:bg-[#1a1a1e]">
+    <div className="p-4 w-[950px] mx-auto dark:bg-[#1a1a1e] mt-16">
       <h1 className="text-3xl font-bold mb-6 text-black dark:text-white">My Friends</h1>
 
       {/* Tabs */}

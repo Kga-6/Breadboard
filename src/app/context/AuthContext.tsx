@@ -73,6 +73,11 @@ interface AuthContextType {
   sendVerificationEmail: () => Promise<void>;
   sendPasswordReset: (email: string) => Promise<void>;
   checkUsernameAvailability: (username: string) => Promise<boolean>;
+  updateReaderSettings: (settings: {
+    fontSize: number;
+    font: string;
+    numbersAndTitles: boolean;
+  }) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null >(null);
@@ -288,7 +293,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (loading) {
       if (pathname === '/login' || pathname === '/register') {
-        router.replace('/app/home');
+        router.replace('/app/play');
       }
     }
     console.log(loading)
@@ -536,7 +541,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       throw error;
     }
   }
-  
+
+  async function updateReaderSettings(settings: {
+    fontSize: number;
+    font: string;
+    numbersAndTitles: boolean;
+  }): Promise<void> {
+    if (!currentUser) throw new Error("Not authenticated");
+    const userRef = doc(firestore, "users", currentUser.uid);
+    await updateDoc(userRef, { readerSettings: settings });
+  }
   const contextValue: AuthContextType = {
     currentUser,
     userData,
@@ -565,6 +579,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     sendVerificationEmail,
     sendPasswordReset,
     checkUsernameAvailability,
+    updateReaderSettings,
   };
 
   return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>;

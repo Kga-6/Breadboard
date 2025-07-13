@@ -87,7 +87,7 @@ export default function BibleSolo({
   }, [selectedVerses, userData.biblePersonalization, chapterData]);
 
   const chapterHTML = useMemo(() => {
-      return formatChapterHTML(chapterData, userData, selectedVerses);
+      return formatChapterHTML(chapterData, userData, selectedVerses, false);
     }, [chapterData, userData, selectedVerses]);
 
   const formattedVerseReference = useMemo(() => {

@@ -2,14 +2,46 @@ import { onCall, HttpsError, onRequest } from "firebase-functions/v2/https";
 import { onDocumentCreated } from 'firebase-functions/v2/firestore';
 import { beforeUserCreated, beforeUserSignedIn } from 'firebase-functions/v2/identity';
 import { WebhookHandler } from "@liveblocks/node";
-import { UserTypes } from "../../../src/types";
 import { initializeApp } from "firebase-admin/app";
 import { getFirestore, FieldValue, Firestore } from "firebase-admin/firestore";
 import { getStorage } from "firebase-admin/storage";
 import { getAuth } from "firebase-admin/auth";
 
+export interface UserTypes {
+  uid?: string;
+  name: string | null;
+  email: string | null;
+  username: string | null;
+  usernameLower: string | null;
+  completed_onboarding: boolean;
+  isPro?: boolean;
+  profilePictureUrl: string | null;
+  online?: boolean;
+  dob: string;
+  isTesting: boolean;
+  dobChangeCount: number | null | undefined;
+  gender: string | null;
+  language: string | null;
+  onboarding: {
+    profilePicture: boolean;
+    username: boolean;
+  };
+  bibleRoom: {
+    invited: string [],
+    sharing: boolean,
+  },
+  biblePersonalization: Record<string, Record<string, Record<string, Record<string, string>>>>; // User highlights, notes
+  readerSettings: {
+    font: string;
+    fontSize: number;
+    numbersAndTitles: boolean;
+  };
+  lastSeen?: FirebaseFirestore.Timestamp;
+  createdAt: FirebaseFirestore.Timestamp;
+  updatedAt: FirebaseFirestore.Timestamp;
+}
 
-// Initialize Firebase Admin
+// Initialize Firebase Adminsadasd
 initializeApp();
 const db = getFirestore();
 const auth = getAuth();
@@ -196,7 +228,7 @@ export const createUserProfile = onCall(async (request) => {
       isTesting: true,
       dobChangeCount: 0,
       gender: "",
-      language: "",
+      language: "English",
       onboarding: {
         profilePicture: false,
         username: false,
@@ -206,6 +238,11 @@ export const createUserProfile = onCall(async (request) => {
         sharing: false,
       },
       biblePersonalization: {} as Record<string, Record<string, Record<string, Record<string, string>>>>,
+      readerSettings: {
+        font: "Inter",
+        fontSize: 18,
+        numbersAndTitles: true,
+      },
       lastSeen: FieldValue.serverTimestamp() as FirebaseFirestore.Timestamp,
       createdAt: FieldValue.serverTimestamp() as FirebaseFirestore.Timestamp,
       updatedAt: FieldValue.serverTimestamp() as FirebaseFirestore.Timestamp,
