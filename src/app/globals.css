@@ -46,6 +46,10 @@
 html,
 body {
   height: 100%;
+  user-select: text !important;
+}
+main {
+  user-select: text !important;
 }
 
 :root {

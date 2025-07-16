@@ -21,6 +21,11 @@ const testing_games = {
     image: "/images/wordicon.jpg",
     description: "Write the Word is a fun and challenging game...",
   },
+  3: {
+    name: "Guess the song",
+    image: "/images/songicon.jpg",
+    description: "Guess the song is a fun and challenging game... 3",
+  },
 };
 
 export default function Play() {

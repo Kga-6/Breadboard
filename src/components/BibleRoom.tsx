@@ -1,10 +1,11 @@
 "use client";
 
-import { ReactNode } from "react";
+import { ReactNode, useEffect } from "react";
 import {
   LiveblocksProvider,
   RoomProvider,
   ClientSideSuspense,
+  useStatus,
 } from "@liveblocks/react/suspense";
 import { useAuth } from "@/app/context/AuthContext";
 import { useRouter } from "next/navigation";
@@ -12,9 +13,26 @@ import { useRouter } from "next/navigation";
 interface RoomProps {
   children: ReactNode,
   roomId: string,
+  onConnectionChange: (isConnected: boolean) => void
 }
 
-export function BibleRoom({ children, roomId }: RoomProps ) {
+function RoomConnectionManager({ 
+  onConnectionChange 
+}: { 
+  onConnectionChange: RoomProps["onConnectionChange"]
+}) {
+  const status = useStatus();
+  useEffect(() => {
+    if (status === 'connected') {
+      onConnectionChange(true);
+    } else {
+      onConnectionChange(false);
+    }
+  }, [status, onConnectionChange]);
+  return null;
+}
+
+export function BibleRoom({ children, roomId, onConnectionChange }: RoomProps ) {
   const {currentUser, userData} = useAuth();
   const router = useRouter();
 
@@ -72,6 +90,7 @@ export function BibleRoom({ children, roomId }: RoomProps ) {
         initialPresence={{ cursor: { x: 0, y: 0 }, chapterId: "" }} 
       >
         <ClientSideSuspense fallback={<div>Loading…</div>}>
+          <RoomConnectionManager onConnectionChange={onConnectionChange} />
           {children}
         </ClientSideSuspense>
       </RoomProvider>

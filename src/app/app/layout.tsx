@@ -4,7 +4,7 @@ import { AppSidebar } from "@/components/app-sidebar";
 export default function DashboardLayout({children}: {children: React.ReactNode}) {
   return (
     <SidebarProvider>
-      <AppSidebar />
+      <AppSidebar side="left" />
       <SidebarInset>
         {children}
       </SidebarInset>

@@ -14,6 +14,7 @@ export default function Cursor({ color, x, y }: Props) {
         left: 0,
         top: 0,
         transform: `translateX(${x}px) translateY(${y}px)`,
+        overflow: "hidden",
       }}
       // 👇 Simply change the width and height here
       width="96"  // Changed from 64

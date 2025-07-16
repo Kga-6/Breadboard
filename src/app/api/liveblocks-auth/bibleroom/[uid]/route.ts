@@ -90,6 +90,7 @@ export async function POST(request: NextRequest) {
       user.uid,
       { 
         userInfo: {
+          uid: userInfo.uid,
           name: userInfo.name || "Anonymous",
           username: userInfo.username,
           avatar: userInfo.profilePictureUrl || `https://liveblocks.io/avatars/avatar-${Math.floor(Math.random() * 30)}.png`,

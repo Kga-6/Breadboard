@@ -7,11 +7,13 @@ interface CacheEntry {
   data: BibleTypes | BookTypes | ChapterRefTypes | ChapterTypes;
 }
 
+const returnCacheData = false;
+
 async function fetchBibleData(path: string, cacheKey?: string) {
   const API_KEY = process.env.BIBLE_API_KEY;
   if (!API_KEY) throw new Error("Missing BIBLE_API_KEY");
 
-  if (cacheKey) {
+  if (cacheKey && returnCacheData) {
     const cachedData = await getCache(cacheKey) as CacheEntry;
     if (cachedData) return cachedData.data;
   }
@@ -30,14 +32,17 @@ async function fetchBibleData(path: string, cacheKey?: string) {
 
   const data = (await response.json());
 
-  if (cacheKey) {
+  if (cacheKey && returnCacheData) {
     setCache(cacheKey, data);
   }
 
   return data.data;
 }
 
-export default async function BiblePage({ params, searchParams }: { params: Promise<{ uid: string }>, searchParams: Promise<{ bibleId: string, bookId: string, chapterId: string }> }) {
+export default async function BiblePage(
+  { params, searchParams }: { params: Promise<{ uid: string }>, 
+  searchParams: Promise<{ bibleId: string, bookId: string, chapterId: string }> }
+) {
   const { uid } = await params
   const resolvedSearchParams = await searchParams
 
@@ -53,7 +58,7 @@ export default async function BiblePage({ params, searchParams }: { params: Prom
     initialChapters,
     initialChapterContent
   ] = await Promise.all([
-    fetchBibleData('bibles?ids=de4e12af7f28f599-02'),
+    fetchBibleData(`bibles?ids=${bibleId}`),
     fetchBibleData(`bibles/${bibleId}/books`, `bible_${bibleId}_books`),
     fetchBibleData(`bibles/${bibleId}/books/${bookId}/chapters`, `bible_${bibleId}_books_${bookId}_chapters`),
     fetchBibleData(`bibles/${bibleId}/chapters/${chapterId}`, `bible_${bibleId}_chapters_${chapterId}`)

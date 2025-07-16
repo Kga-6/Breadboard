@@ -24,7 +24,7 @@ import { useRouter } from "next/navigation"
 import { useEffect } from "react"
 
 
-export function AppSidebar() {
+export function AppSidebar({side}: {side: "left" | "right"}) {
 
   const { userData } = useAuth();
   const pathname = usePathname();
@@ -54,7 +54,7 @@ export function AppSidebar() {
     },
     {
       title: "Friends",
-      url: "/app/friends",
+      url: "/app/friends/friends",
       icon: Users,
     },
     // {
@@ -65,7 +65,7 @@ export function AppSidebar() {
   ]
 
   return (
-    <Sidebar collapsible="icon">
+    <Sidebar collapsible="icon" side={side}>
 
       <SidebarHeader>
 

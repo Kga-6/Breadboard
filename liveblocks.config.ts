@@ -23,6 +23,7 @@ declare global {
       uid: string;
       info: {
         // Example properties, for useSelf, useUser, useOthers, etc.
+        uid: string;
         name: string;
         username: string
         avatar: string;

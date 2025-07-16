@@ -1,4 +1,4 @@
-import { CircleX, Highlighter, Copy, X, Share, Bot } from "lucide-react";
+import { CircleX, Highlighter, Copy, X, Share, Bot, Notebook } from "lucide-react";
 import { Button } from "./ui/button"
 
 import {
@@ -31,7 +31,7 @@ export default function VerseSelectionDrawer({
   
   return(
 
-    <div className="fixed flex-col bottom-0 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 bg-white p-8 rounded-t-lg shadow-2xl w-[450px]">
+    <div className="fixed flex-col bottom-0 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-white p-8 rounded-t-lg shadow-2xl w-[450px]">
       <header className="flex w-full justify-between">
         <div>
           <h1 className="text-xs font-bold text-gray-500 mb-1">Currently Selected:</h1>
@@ -67,6 +67,12 @@ export default function VerseSelectionDrawer({
         </div>
         <div className="flex flex-row justify-between items-center py-4 border-b">
           <button onClick={onCopy} className="flex flex-row gap-2 items-center  w-full">
+            <Notebook className="w-6 h-6" />
+            <p className="text-md font-medium">Take Notes</p>
+          </button>
+        </div>
+        <div className="flex flex-row justify-between items-center py-4 border-b">
+          <button onClick={onCopy} className="flex flex-row gap-2 items-center  w-full">
             <Copy className="w-6 h-6" />
             <p className="text-md font-medium">Copy</p>
           </button>
@@ -91,6 +97,8 @@ export default function VerseSelectionDrawer({
                 </TooltipContent>
              </Tooltip>
             ))}
+
+            
           </div>
         </div>
       </div>

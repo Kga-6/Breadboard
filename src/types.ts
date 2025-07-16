@@ -4,6 +4,7 @@
 
 // [ USERS TYPES ] //
 export interface UserTypes {
+  // update firebase functions index.ts too
   uid?: string;
   name: string | null;
   email: string | null;
@@ -18,6 +19,7 @@ export interface UserTypes {
   dobChangeCount: number | null | undefined;
   gender: string | null;
   language: string | null;
+  // update firebase functions index.ts too
   onboarding: {
     profilePicture: boolean;
     username: boolean;
@@ -29,12 +31,13 @@ export interface UserTypes {
   biblePersonalization: Record<string, Record<string, Record<string, Record<string, string>>>>; // User highlights, notes
   readerSettings: {
     font: string;
-    fontSize: number;
+    fontSize: string;
     numbersAndTitles: boolean;
   };
   lastSeen?: FirebaseFirestore.Timestamp;
   createdAt: FirebaseFirestore.Timestamp;
   updatedAt: FirebaseFirestore.Timestamp;
+  // update firebase functions index.ts too
 }
 
 // [ FRIENDS TYPES ] //

@@ -1,6 +1,4 @@
 import { onCall, HttpsError, onRequest } from "firebase-functions/v2/https";
-import { onDocumentCreated } from 'firebase-functions/v2/firestore';
-import { beforeUserCreated, beforeUserSignedIn } from 'firebase-functions/v2/identity';
 import { WebhookHandler } from "@liveblocks/node";
 import { initializeApp } from "firebase-admin/app";
 import { getFirestore, FieldValue, Firestore } from "firebase-admin/firestore";
@@ -33,7 +31,7 @@ export interface UserTypes {
   biblePersonalization: Record<string, Record<string, Record<string, Record<string, string>>>>; // User highlights, notes
   readerSettings: {
     font: string;
-    fontSize: number;
+    fontSize: string;
     numbersAndTitles: boolean;
   };
   lastSeen?: FirebaseFirestore.Timestamp;
@@ -109,79 +107,6 @@ const generateUniqueUsername = async (displayName: string, database: Firestore) 
   return username;
 };
 
-// Trigger when user is created (before they're saved to Firebase Auth)
-export const beforeUserCreatedTrigger = beforeUserCreated(async (event) => {
-  const user = event.data;
-  
-  if (!user) {
-    throw new HttpsError('invalid-argument', 'User data is required');
-  }
-  
-  // You can add validation here
-  if (!user.email) {
-    throw new HttpsError('invalid-argument', 'Email is required');
-  }
-  
-  return {
-    // You can set custom claims here if needed
-    customClaims: {
-      role: 'user',
-      createdAt: new Date().toISOString(),
-    }
-  };
-});
-
-// Trigger when user signs in (you can add additional checks here)
-export const beforeUserSignedInTrigger = beforeUserSignedIn(async (event) => {
-  const user = event.data;
-  
-  if (!user) {
-    return;
-  }
-
-  const isAdmin = ADMIN_EMAILS.includes(user.email || "");
-  const isPro = isAdmin || PRO_EMAILS.includes(user.email || "");
-
-  await auth.setCustomUserClaims(user.uid, {
-    role: isAdmin ? "admin" : isPro ? "pro" : "user",
-    isPro: isPro,
-  });
-
-  // Add any sign-in validation logic here
-  console.log(`User ${user.uid} is signing in`);
-  
-  return;
-});
-
-// Trigger when a new user document is created in Firestore
-export const onUserCreated = onDocumentCreated('/users/{uid}', async (event) => {
-  const userData = event.data?.data();
-  const uid = event.params?.uid;
-  
-  if (!userData || !uid) return;
-  
-  try {
-    // Create username reservation
-    await db.collection('usernames').doc(userData.username).set({
-      uid: uid,
-      createdAt: FirebaseFirestore.Timestamp.now(),
-    });
-    
-    // Create user stats document
-    await db.collection('userStats').doc(uid).set({
-      postsCount: 0,
-      followersCount: 0,
-      followingCount: 0,
-      likesReceived: 0,
-      commentsReceived: 0,
-      updatedAt: FirebaseFirestore.Timestamp.now(),
-    });
-    
-    console.log(`User profile created successfully for ${uid}`);
-  } catch (error) {
-    console.error('Error creating user profile:', error);
-  }
-});
 
 // Callable function to create user profile (called from client)
 export const createUserProfile = onCall(async (request) => {
@@ -239,8 +164,8 @@ export const createUserProfile = onCall(async (request) => {
       },
       biblePersonalization: {} as Record<string, Record<string, Record<string, Record<string, string>>>>,
       readerSettings: {
-        font: "Inter",
-        fontSize: 18,
+        font: "Arial",
+        fontSize: "18",
         numbersAndTitles: true,
       },
       lastSeen: FieldValue.serverTimestamp() as FirebaseFirestore.Timestamp,
